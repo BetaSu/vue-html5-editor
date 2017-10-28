@@ -44,10 +44,12 @@ class VueHtml5Editor {
         if (Array.isArray(options.visibleModules)) {
             modules = (() => {
                 const arr = []
-                modules.forEach((module) => {
-                    if (options.visibleModules.includes(module.name)) {
-                        arr.push(module)
-                    }
+                options.visibleModules.forEach((name) => {
+                    modules.forEach((module) => {
+                        if (module.name === name) {
+                            arr.push(module)
+                        }
+                    })
                 })
                 return arr
             })()
@@ -64,13 +66,20 @@ class VueHtml5Editor {
                 module.dashboard.module = module
                 components[`dashboard-${module.name}`] = module.dashboard
             }
+            if (module.tab) {
+              module.tab.module = module
+              module.tabName = `tab-${module.name}`
+              components[module.tabName] = module.tab
+            }
             if (options.icons && options.icons[module.name]) {
                 module.icon = options.icons[module.name]
             }
 
             module.hasDashboard = !!module.dashboard
+            module.hasTab = !!module.tab
             // prevent vue sync
             module.dashboard = null
+            module.tab = null
         })
 
         // i18n

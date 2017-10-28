@@ -2,12 +2,19 @@
     <div class="toolbar" :style="{'z-index':zIndex+1}" ref="toolbar">
         <ul>
             <template v-for="module in modules">
+              <template v-if="!module.hasTab">
                 <li :title="locale[module.i18n]" @click="activeModule(module)">
-                    <span class="icon" :class="module.icon"></span>
-                    <template v-if="showModuleName === undefined ? defaultShowModuleName : showModuleName">
-                        &nbsp;{{locale[module.i18n]}}
-                    </template>
+                  <span class="icon" :class="module.icon"></span>
+                  <template v-if="showModuleName === undefined ? defaultShowModuleName : showModuleName">
+                    &nbsp;{{locale[module.i18n]}}
+                  </template>
                 </li>
+              </template>
+              <template v-else>
+                <keep-alive>
+                  <li class="tab" :is="module.tabName"></li>
+                </keep-alive>
+              </template>
             </template>
         </ul>
         <div class="dashboard" v-show="dashboard" ref="dashboard">

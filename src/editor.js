@@ -1,9 +1,7 @@
 import RangeHandler from './range/handler'
 import './style.css'
 import template from './editor.html'
-/**
- * Created by peak on 2017/2/9.
- */
+
 export default {
     template,
     props: {
@@ -145,6 +143,9 @@ export default {
             if (module.hasDashboard) {
                 this.toggleDashboard(`dashboard-${module.name}`)
             }
+        },
+        initTab () {
+          console.log('this', this)
         }
     },
     created(){
@@ -155,6 +156,7 @@ export default {
         })
     },
     mounted(){
+        this.initTab()
         const content = this.$refs.content
         content.innerHTML = this.content
         content.addEventListener('mouseup', this.saveCurrentRange, false)
@@ -172,7 +174,6 @@ export default {
                 this.saveCurrentRange()
             }
         }
-
         window.addEventListener('touchend', this.touchHandler, false)
     },
     updated(){
