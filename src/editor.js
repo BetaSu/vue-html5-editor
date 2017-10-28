@@ -143,9 +143,6 @@ export default {
             if (module.hasDashboard) {
                 this.toggleDashboard(`dashboard-${module.name}`)
             }
-        },
-        initTab () {
-          console.log('this', this)
         }
     },
     created(){
@@ -156,7 +153,6 @@ export default {
         })
     },
     mounted(){
-        this.initTab()
         const content = this.$refs.content
         content.innerHTML = this.content
         content.addEventListener('mouseup', this.saveCurrentRange, false)

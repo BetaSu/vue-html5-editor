@@ -67,6 +67,7 @@ class VueHtml5Editor {
                 components[`dashboard-${module.name}`] = module.dashboard
             }
             if (module.tab) {
+              // $options.module
               module.tab.module = module
               module.tabName = `tab-${module.name}`
               components[module.tabName] = module.tab

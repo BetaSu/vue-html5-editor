@@ -3,7 +3,7 @@
         <ul>
             <template v-for="module in modules">
               <template v-if="!module.hasTab">
-                <li :title="locale[module.i18n]" @click="activeModule(module)">
+                <li :title="locale[module.i18n]" :class="module.name + '-tab'" @click="activeModule(module)">
                   <span class="icon" :class="module.icon"></span>
                   <template v-if="showModuleName === undefined ? defaultShowModuleName : showModuleName">
                     &nbsp;{{locale[module.i18n]}}
