@@ -75,6 +75,9 @@ class VueHtml5Editor {
             if (options.icons && options.icons[module.name]) {
                 module.icon = options.icons[module.name]
             }
+            if (module.config.handler) {
+              module.handler = module.handler || module.config.handler
+            }
 
             module.hasDashboard = !!module.dashboard
             module.hasTab = !!module.tab

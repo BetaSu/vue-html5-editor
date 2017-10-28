@@ -9,6 +9,7 @@ export default {
     template,
     data() {
         return {
+            name: 'dashboard-image',
             imageUrl: '',
             upload: {
                 status: 'ready', // progress,success,error,abort

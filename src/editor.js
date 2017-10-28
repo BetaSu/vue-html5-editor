@@ -31,7 +31,7 @@ export default {
         return {
             // defaultShowModuleName:false
             // locale: {},
-            // modules:{},
+            modules:{},
             fullScreen: false,
             dashboard: null
         }
@@ -171,6 +171,20 @@ export default {
             }
         }
         window.addEventListener('touchend', this.touchHandler, false)
+
+        // 针对图片的hack方法 使得点击图片tab就能选择文件
+        const imgBtn = this.$el.querySelector('.image-tab')
+        if (imgBtn) {
+          this.toggleDashboard('dashboard-image')
+          imgBtn.addEventListener('click', e => {
+            this.$children.forEach(child => {
+              if (child.name === 'dashboard-image') {
+                child.pick()
+              }
+            })
+          })
+        }
+
     },
     updated(){
         // update dashboard style
