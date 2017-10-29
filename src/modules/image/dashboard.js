@@ -1,6 +1,5 @@
 import lrz from 'lrz'
 import template from './dashboard.html'
-import Command from '../../range/command'
 
 /**
  * Created by peak on 2017/2/10.
@@ -27,7 +26,7 @@ export default {
             if (!this.imageUrl) {
                 return
             }
-            this.$parent.execCommand(Command.INSERT_IMAGE, this.imageUrl)
+            this.$parent.execCommand('insertImage', this.imageUrl)
             this.imageUrl = null
         },
         pick() {
@@ -117,7 +116,7 @@ export default {
             component.uploadToServer(file)
         },
         insertBase64(data) {
-            this.$parent.execCommand(Command.INSERT_IMAGE, data)
+            this.$parent.execCommand('insertImage', data)
         },
         uploadToServer(file) {
             const config = this.$options.module.config
@@ -160,7 +159,7 @@ export default {
                 try {
                     const url = config.uploadHandler(xhr.responseText)
                     if (url) {
-                        this.$parent.execCommand(Command.INSERT_IMAGE, url)
+                        this.$parent.execCommand('insertImage', url)
                     }
                 } catch (err) {
                     this.setUploadError(err.toString())

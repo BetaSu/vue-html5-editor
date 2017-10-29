@@ -1,4 +1,3 @@
-import Command from './command'
 import {
     mergeArray,
     getDescendantTextNodes,
@@ -7,6 +6,8 @@ import {
     getParentBlockNode,
     isInlineElement
 } from './util'
+
+import commands from '../commands'
 
 // for IE 11
 if (!Text.prototype.contains) {
@@ -93,140 +94,12 @@ export default class RangeHandler {
      * @param arg
      */
     execCommand(command, arg) {
-        switch (command) {
-
-            case Command.FONT_SIZE: {
-                // 重新实现，改为直接修改样式
-                const textNodes = this.getAllTextNodesInRange()
-                if (!textNodes.length) {
-                    break
-                }
-                if (textNodes.length === 1 && textNodes[0] === this.range.startContainer
-                    && textNodes[0] === this.range.endContainer) {
-                    const textNode = textNodes[0]
-                    if (this.range.startOffset === 0
-                        && this.range.endOffset === textNode.textContent.length) {
-                        if (textNode.parentNode.childNodes.length === 1
-                            && isInlineElement(textNode.parentNode)) {
-                            textNode.parentNode.style.fontSize = arg
-                            break
-                        }
-                        const span = document.createElement('span')
-                        span.style.fontSize = arg
-                        textNode.parentNode.insertBefore(span, textNode)
-                        span.appendChild(textNode)
-                        break
-                    }
-                    const span = document.createElement('span')
-                    span.innerText = textNode.textContent.substring(
-                        this.range.startOffset, this.range.endOffset)
-                    span.style.fontSize = arg
-                    const frontPart = document.createTextNode(
-                        textNode.textContent.substring(0, this.range.startOffset))
-                    textNode.parentNode.insertBefore(frontPart, textNode)
-                    textNode.parentNode.insertBefore(span, textNode)
-                    textNode.textContent = textNode.textContent.substring(this.range.endOffset)
-                    this.range.setStart(span, 0)
-                    this.range.setEnd(span, 1)
-                    break
-                }
-
-                textNodes.forEach((textNode) => {
-                    if (textNode === this.range.startContainer) {
-                        if (this.range.startOffset === 0) {
-                            if (textNode.parentNode.childNodes.length === 1
-                                && isInlineElement(textNode.parentNode)) {
-                                textNode.parentNode.style.fontSize = arg
-                            } else {
-                                const span = document.createElement('span')
-                                span.style.fontSize = arg
-                                textNode.parentNode.insertBefore(span, textNode)
-                                span.appendChild(textNode)
-                            }
-                            return
-                        }
-                        const span = document.createElement('span')
-                        textNode.textContent = textNode.textContent.substring(
-                            0, this.range.startOffset)
-                        span.style.fontSize = arg
-                        textNode.parentNode.insertBefore(span, textNode)
-                        this.range.setStart(textNode, 0)
-                        return
-                    }
-                    if (textNode === this.range.endContainer) {
-                        if (this.range.endOffset === textNode.textContent.length) {
-                            if (textNode.parentNode.childNodes.length === 1
-                                && isInlineElement(textNode.parentNode)) {
-                                textNode.parentNode.style.fontSize = arg
-                            } else {
-                                const span = document.createElement('span')
-                                span.style.fontSize = arg
-                                textNode.parentNode.insertBefore(span, textNode)
-                                span.appendChild(textNode)
-                            }
-                            return
-                        }
-                        const span = document.createElement('span')
-                        textNode.textContent = textNode.textContent.substring(this.range.endOffset)
-                        span.style.fontSize = arg
-                        textNode.parentNode.insertBefore(span, textNode)
-                        span.appendChild(textNode)
-                        this.range.setStart(textNode, textNode.textContent.length)
-                        return
-                    }
-                    if (textNode.parentNode.childNodes.length === 1
-                        && isInlineElement(textNode.parentNode)) {
-                        textNode.parentNode.style.fontSize = arg
-                        return
-                    }
-
-                    const span = document.createElement('span')
-                    span.style.fontSize = arg
-                    textNode.parentNode.insertBefore(span, textNode)
-                    span.appendChild(textNode)
-                })
-                break
-            }
-            case Command.FORMAT_BLOCK: {
-                if (document.execCommand(Command.FORMAT_BLOCK, false, arg)) {
-                    break
-                }
-                // hack
-                const element = document.createElement(arg)
-                this.range.surroundContents(element)
-                break
-            }
-            case Command.LINE_HEIGHT: {
-                const textNodes = this.getAllTextNodesInRange()
-                textNodes.forEach((textNode) => {
-                    const parentBlock = getParentBlockNode(textNode)
-                    if (parentBlock) {
-                        parentBlock.style.lineHeight = arg
-                    }
-                })
-                break
-            }
-            case Command.INSERT_HTML: {
-                if (document.execCommand(Command.INSERT_HTML, false, arg)) {
-                    break
-                }
-                // hack
-                const fragment = document.createDocumentFragment()
-                const div = document.createElement('div')
-                div.innerHTML = arg
-                if (div.hasChildNodes()) {
-                    for (let i = 0; i < div.childNodes.length; i++) {
-                        fragment.appendChild(div.childNodes[i].cloneNode(true))
-                    }
-                }
-                this.range.deleteContents()
-                this.range.insertNode(fragment)
-                break
-            }
-            default: {
-                document.execCommand(command, false, arg)
-                break
-            }
+        const r = this.range
+        const existCommand = commands[command]
+        if (existCommand) {
+            existCommand(this, arg)
+            return
         }
+        document.execCommand(command, false, arg)
     }
 }

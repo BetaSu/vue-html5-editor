@@ -1,5 +1,5 @@
 import template from './dashboard.html'
-import Command from '../../range/command'
+
 /**
  * Created by peak on 2017/2/10.
  */
@@ -42,7 +42,7 @@ export default {
             this.$parent.execCommand('formatBlock', `h${heading}`)
         },
         setLineHeight(lh){
-            this.$parent.execCommand(Command.LINE_HEIGHT, lh)
+            this.$parent.execCommand('lineHeight', lh)
         }
     },
     created(){

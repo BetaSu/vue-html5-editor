@@ -172,6 +172,20 @@ export default {
         }
         window.addEventListener('touchend', this.touchHandler, false)
 
+        if (this.shortcut) {
+          content.addEventListener('keydown', (e) => {
+            if (e.keyCode === 9 && this.shortcut.tab) {
+              e.preventDefault()
+              this.saveCurrentRange()
+              if (e.shiftKey) {
+                this.execCommand('outdent')
+              } else {
+                this.execCommand('smartIndent')
+              }
+            }
+          }, false)
+        }
+
         // 针对图片的hack方法 使得点击图片tab就能选择文件
         const imgBtn = this.$el.querySelector('.image-tab')
         if (imgBtn) {
@@ -184,7 +198,6 @@ export default {
             })
           })
         }
-
     },
     updated(){
         // update dashboard style

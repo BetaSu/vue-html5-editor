@@ -98,10 +98,13 @@ class VueHtml5Editor {
         // showModuleName
         const defaultShowModuleName = !!options.showModuleName
 
+        // 快捷键支持
+        const shortcut = options.shortcut
+
         // ######################################
         const compo = mixin(editor, {
             data() {
-                return {modules, locale, defaultShowModuleName}
+                return {modules, locale, defaultShowModuleName, shortcut}
             },
             components
         })
