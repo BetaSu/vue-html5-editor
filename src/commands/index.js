@@ -1,8 +1,5 @@
 import {
-  mergeArray,
   getDescendantTextNodes,
-  getAfterStartDescendantTextNodes,
-  getBeforeEndDescendantTextNodes,
   getParentBlockNode,
   isInlineElement,
   getAllSpecifyNode
@@ -13,7 +10,7 @@ import {
  **/
 
 const commands = {
-  fontSize (rh, arg) {
+  fontSize(rh, arg) {
     // 重新实现，改为直接修改样式
     const textNodes = rh.getAllTextNodesInRange()
     if (!textNodes.length) {
@@ -105,7 +102,7 @@ const commands = {
     })
     return
   },
-  'formatBlock' (rh, arg) {
+  formatBlock(rh, arg) {
     if (document.execCommand('formatBlock', false, arg)) {
       return
     }
@@ -114,7 +111,7 @@ const commands = {
     rh.range.surroundContents(element)
     return
   },
-  'lineHeight' (rh, arg) {
+  lineHeight(rh, arg) {
     const textNodes = rh.getAllTextNodesInRange()
     textNodes.forEach((textNode) => {
       const parentBlock = getParentBlockNode(textNode)
@@ -124,7 +121,7 @@ const commands = {
     })
     return
   },
-  'insertHTML' (rh, arg) {
+  insertHTML(rh, arg) {
     if (document.execCommand('insertHTML', false, arg)) {
       return
     }
@@ -142,12 +139,13 @@ const commands = {
     return
   },
   // 废弃
-  'indentv2' (rh, arg) {
+  indentv2(rh, arg) {
     const range = rh.range
     // 单行的情况
     if (range.startContainer === range.endContainer) {
-      let text = getDescendantTextNodes(range.startContainer)[0]
-      if (!arg && text && text.nodeValue.length === range.startOffset && range.startOffset === range.endOffset) {
+      const text = getDescendantTextNodes(range.startContainer)[0]
+      if (!arg && text && text.nodeValue.length === range.startOffset
+        && range.startOffset === range.endOffset) {
         return
       }
       if (!text) {
@@ -168,10 +166,9 @@ const commands = {
             if (parent.childNodes && parent.childNodes[0]) {
               parent.insertBefore(fragment, parent.childNodes[0])
               return
-            } else {
+            }
               parent.appendChild(fragment)
               return
-            }
           }
           // 针对列表 在列表li内部插入indent
           if (parent.nodeName === 'LI') {
@@ -188,7 +185,7 @@ const commands = {
     return
   },
   // 废弃
-  'outdentv2' (rh, arg) {
+  outdentv2(rh) {
     const range = rh.range
     // 单行的情况
     if (range.startContainer === range.endContainer) {
@@ -202,25 +199,25 @@ const commands = {
     }
   },
   // unorderedList's insert and indent logic
-  'listIndent' (rh, arg) {
+  listIndent(rh, arg) {
     const range = rh.range
     const parent = getParentBlockNode(range.startContainer)
     if (parent.dataset && parent.dataset.editor === 'content') {
       document.execCommand('insertUnorderedList', false, arg)
       return
-    } else {
+    }
       if (parent.nodeName !== 'LI') {
         document.execCommand('insertUnorderedList', false, arg)
         return
       }
-    }
+
     document.execCommand('indent', false)
   },
   // treat normal indent and list indent differently
-  'smartIndent' (rh, arg) {
+  smartIndent(rh, arg) {
     const parent = getParentBlockNode(rh.range.startContainer)
     if (parent.nodeName === 'UL' || parent.nodeName === 'LI') {
-      commands['listIndent'](rh, arg)
+      commands.listIndent(rh, arg)
     } else {
       document.execCommand('indent', false, arg)
     }

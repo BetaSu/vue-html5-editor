@@ -2,9 +2,7 @@ import {
     mergeArray,
     getDescendantTextNodes,
     getAfterStartDescendantTextNodes,
-    getBeforeEndDescendantTextNodes,
-    getParentBlockNode,
-    isInlineElement
+    getBeforeEndDescendantTextNodes
 } from './util'
 
 import commands from '../commands'
@@ -94,7 +92,6 @@ export default class RangeHandler {
      * @param arg
      */
     execCommand(command, arg) {
-        const r = this.range
         const existCommand = commands[command]
         if (existCommand) {
             existCommand(this, arg)

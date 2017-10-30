@@ -37,7 +37,8 @@ export const getDescendantTextNodes = (ancestor) => {
     return textNodes
 }
 /**
- * func find all the descendant text nodes of an ancestor element that before the specify end element,
+ * func find all the descendant text nodes of an ancestor element
+ * that before the specify end element,
  * the ancestor element must contains the end element.
  * @param ancestor
  * @param endEl
@@ -71,7 +72,8 @@ export const getBeforeEndDescendantTextNodes = (ancestor, endEl) => {
     return textNodes
 }
 /**
- * func find all the descendant text nodes of an ancestor element that after the specify start element,
+ * func find all the descendant text nodes of an ancestor element
+ * that after the specify start element,
  * the ancestor element must contains the start element.
  * @param ancestor
  * @param startEl
@@ -144,11 +146,10 @@ export const getAllSpecifyNode = (ancestor, searchOpinion) => {
   delete searchOpinion.tagName
   const tags = ancestor.querySelectorAll(targetTagName)
   const result = []
-  tags.forEach(tag => {
+  tags.forEach((tag) => {
     const opinionKeys = Object.keys(searchOpinion)
     let pass = true
-    opinionKeys.forEach(opinion => {
-      var a = tag.getAttribute(opinion)
+    opinionKeys.forEach((opinion) => {
       if (tag.getAttribute(opinion) !== searchOpinion[opinion]) {
         pass = false
       }
