@@ -1,2 +1,2 @@
-import editor from './src'
+import editor from '../src'
 export default editor

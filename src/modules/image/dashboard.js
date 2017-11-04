@@ -82,9 +82,24 @@ export default {
             }
 
             const file = this.$refs.file.files[0]
+
             if (file.size > config.sizeLimit) {
                 this.setUploadError(this.$parent.locale['exceed size limit'])
+                if (config.beforeUpload) {
+                  config.beforeUpload({
+                    status: 'exceed size limit',
+                    code: 3,
+                    file
+                  })
+                }
                 return
+            }
+            if (config.beforeUpload) {
+              config.beforeUpload({
+                status: 'regular',
+                code: 1,
+                file
+              })
             }
             this.$refs.file.value = null
 

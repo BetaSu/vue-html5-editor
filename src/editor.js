@@ -31,7 +31,7 @@ export default {
         return {
             // defaultShowModuleName:false
             // locale: {},
-            modules: {},
+            modules:{},
             fullScreen: false,
             dashboard: null
         }
@@ -190,8 +190,8 @@ export default {
         const imgBtn = this.$el.querySelector('.image-tab')
         if (imgBtn) {
           this.toggleDashboard('dashboard-image')
-          imgBtn.addEventListener('click', () => {
-            this.$children.forEach((child) => {
+          imgBtn.addEventListener('click', e => {
+            this.$children.forEach(child => {
               if (child.name === 'dashboard-image') {
                 child.pick()
               }
