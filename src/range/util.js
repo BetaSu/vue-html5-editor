@@ -167,7 +167,7 @@ export const getAllSpecifyNode = (ancestor, searchOpinion) => {
  * @return {num} number
  **/
 export const howManyNestAncestorSameTag = (node, ancestorNodeName) => {
-  let num = node.nodeName === ancestorNodeName ? 1 : 0
+  let num = node.nodeName === ancestorNodeName.toUpperCase() ? 1 : 0
   let curNode = node
   while (curNode.parentNode && curNode.parentNode.nodeName === ancestorNodeName) {
     num++

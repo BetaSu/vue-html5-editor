@@ -6,8 +6,10 @@ import {
   getParentBlockNode,
   isInlineElement,
   getAllSpecifyNode,
-  getNodeNum
+  getNodeNum,
+  howManyNestAncestorSameTag
 } from '../range/util'
+import { createRandomId } from '../util'
 
 /*
  * desc 请在这里选择需要用到的指令 或者定义新的指令
@@ -205,14 +207,21 @@ const commands = {
   // unorderedList's insert and indent logic
   'listIndent' (rh, arg) {
     const range = rh.range
-    const parent = getParentBlockNode(range.startContainer)
+    const startContainer = range.startContainer
+    const parent = getParentBlockNode(startContainer)
     if (parent.dataset && parent.dataset.editor === 'content') {
       document.execCommand('insertUnorderedList', false, arg)
       return
     } else {
-      if (parent.nodeName !== 'LI') {
-        document.execCommand('insertUnorderedList', false, arg)
-        return
+      if (parent.nodeName === 'LI') {
+        const pre = parent.previousSibling
+        if (pre && pre.nodeName === 'LI') {
+          return document.execCommand('indent', false)
+        }
+        return document.execCommand('insertUnorderedList', false, arg)
+      }
+      if (parent.nodeName === 'UL') {
+        console.log('parent is ul', parent)
       }
     }
     document.execCommand('indent', false)
@@ -228,12 +237,59 @@ const commands = {
         startContainer = parent
       }
       const ulNum = getNodeNum(startContainer, 'ul')
-      let pre_listNum = startContainer.getAttribute('data-ulNum')
+      let pre_listNum = startContainer.getAttribute('data-editor-ulNum')
       if (pre_listNum && Number(pre_listNum) < ulNum) {
         return commands['listIndent'](rh, arg)
       }
-      startContainer.setAttribute('data-ulNum', ulNum)
+      startContainer.setAttribute('data-editor-ulNum', ulNum)
       document.execCommand('indent', false, arg)
+    }
+  },
+  'quote' (rh, arg) {
+    const texts = rh.getAllTextNodesInRange()
+    let container = document.createElement('div')
+    let br = document.createElement('br')
+    let quoteBlock = document.createElement(arg)
+    texts.forEach(text => {
+      const p = document.createElement('div')
+      p.appendChild(text)
+      quoteBlock.appendChild(p)
+    })
+    container.appendChild(quoteBlock)
+    container.appendChild(br)
+    commands['insertHTML'](rh, container.innerHTML)
+  },
+  'todo' (rh, arg) {
+    let todoId = createRandomId('todo')
+    let rowId = createRandomId('row')
+    commands['insertHTML'](rh, `<div><p data-editor-todo=${todoId} contenteditable="false"><input type="checkbox"/><input type="text" placeholder="待办事项"></p><br></div><div data-editor-row="${rowId}"></div>`)
+    document.querySelector(`[data-editor-todo='${todoId}'] input[type=text]`).focus()
+    initCheckbox('[data-editor-todo]')
+    function initCheckbox (selector) {
+      const checkboxs = document.querySelectorAll(selector)
+      checkboxs.forEach((c, index) => {
+        const btn = c.querySelector('[type=checkbox]')
+        const ctn = c.querySelector('[type=text]')
+        btn.onclick = btn.onclick || (e => {
+            if (btn.checked) {
+              ctn.style.textDecoration = 'line-through'
+            } else {
+              ctn.style.textDecoration = 'none'
+            }
+          })
+        ctn.onkeydown = ctn.onkeydown || (e => {
+            if (e.keyCode === 13) {
+              let row = document.querySelector(`[data-editor-row='${rowId}']`)
+              const selection = window.getSelection ? window.getSelection() : document.getSelection()
+              selection.collapse(row, 0)
+              commands['todo'](rh, arg)
+              row.removeAttribute('data-editor-row')
+            }
+            if (e.keyCode === 8 && ctn.value === '') {
+              c.parentNode.removeChild(c)
+            }
+        })
+      })
     }
   }
 }

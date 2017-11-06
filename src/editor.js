@@ -154,8 +154,10 @@ export default {
     },
     mounted(){
         const content = this.$refs.content
+        const toolbar = this.$refs.toolbar
         content.innerHTML = this.content
         content.addEventListener('mouseup', this.saveCurrentRange, false)
+        toolbar.addEventListener('mouseup', this.saveCurrentRange, false)
         content.addEventListener('keyup', () => {
             this.$emit('change', content.innerHTML)
             this.saveCurrentRange()

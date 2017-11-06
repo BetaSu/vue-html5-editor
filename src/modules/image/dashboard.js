@@ -82,6 +82,7 @@ export default {
             }
 
             const file = this.$refs.file.files[0]
+            let imgId = 'img-' + Math.random() * 1000 + new Date().getTime()
 
             if (file.size > config.sizeLimit) {
                 this.setUploadError(this.$parent.locale['exceed size limit'])
@@ -94,35 +95,55 @@ export default {
                 }
                 return
             }
-            if (config.beforeUpload) {
-              config.beforeUpload({
-                status: 'regular',
-                code: 1,
-                file
-              })
-            }
             this.$refs.file.value = null
 
             if (config.compress) {
                 config.compress.fieldName = config.upload && config.upload.fieldName
                     ? config.upload.fieldName : 'image'
                 lrz(file, config.compress).then((rst) => {
+                    if (config.beforeUpload) {
+                      if (rst.file.size > config.sizeLimit) {
+                        this.setUploadError(this.$parent.locale['exceed size limit'])
+                        if (config.beforeUpload) {
+                          config.beforeUpload({
+                            status: 'exceed size limit',
+                            code: 3,
+                            file
+                          })
+                        }
+                        return
+                      }
+                      config.beforeUpload({
+                        status: 'regular',
+                        code: 1,
+                        id: imgId,
+                        file: rst.file
+                      })
+                    }
                     if (config.upload) {
                         component.uploadToServer(rst.file)
                     } else {
-                        component.insertBase64(rst.base64)
+                        component.insertBase64(rst.base64, imgId)
                     }
                 }).catch((err) => {
                     this.setUploadError(err.toString())
                 })
                 return
             }
+            if (config.beforeUpload) {
+              config.beforeUpload({
+                status: 'regular',
+                code: 1,
+                id: imgId,
+                file
+              })
+            }
             // 不需要压缩
             // base64
             if (!config.upload) {
                 const reader = new FileReader()
                 reader.onload = (e) => {
-                    component.insertBase64(e.target.result)
+                    component.insertBase64(e.target.result, imgId)
                 }
                 reader.readAsDataURL(file)
                 return
@@ -130,8 +151,9 @@ export default {
             // 上传服务器
             component.uploadToServer(file)
         },
-        insertBase64(data) {
-            this.$parent.execCommand('insertImage', data)
+        insertBase64(data, id) {
+            // this.$parent.execCommand('insertImage', data)
+            this.$parent.execCommand('insertHTML', `<img src="${data}" data-img="${id}">`)
         },
         uploadToServer(file) {
             const config = this.$options.module.config
