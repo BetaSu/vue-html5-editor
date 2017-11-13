@@ -1,0 +1,26 @@
+<div class="my-vue-editor" :class="{'full-screen':fullScreen}" :style="{'z-index':zIndex}">
+    <div class="toolbar" :style="{'z-index':zIndex+1}" ref="toolbar" data-editor="toolbar">
+        <ul>
+            <template v-for="module in modules">
+              <template v-if="!module.hasTab">
+                <li :title="locale[module.i18n]" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)">
+                  <span class="icon" :class="module.icon"></span>
+                </li>
+              </template>
+              <template v-else>
+                <keep-alive>
+                  <li class="tab" :is="module.tabName" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)"></li>
+                </keep-alive>
+              </template>
+            </template>
+        </ul>
+        <div class="dashboard" v-show="dashboard" ref="dashboard" data-editor="dashboard">
+            <keep-alive>
+                <div v-show="dashboard" :is="dashboard"></div>
+            </keep-alive>
+        </div>
+    </div>
+    <div class="content" ref="content" id="editor-content" :style="contentStyle" data-editor="content"
+         contenteditable @click="toggleDashboard(dashboard)">
+    </div>
+</div>
