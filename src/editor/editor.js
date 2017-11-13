@@ -143,6 +143,7 @@ export default {
       if (typeof module.handler === 'function') {
         module.handler(this, module)
         this.$nextTick(() => {
+          this.saveCurrentRange()
           this.styleInspect()
         })
         return

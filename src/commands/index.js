@@ -345,6 +345,8 @@ const commands = {
 
           function deleteTodo() {
             let row = c.parentNode.querySelector('[data-editor-row]')
+            let br = document.createElement('br')
+            row.appendChild(br)
             const sibling = c.previousSibling ? c.previousSibling : c.parentNode
             c.parentNode.removeChild(c)
             rh.getSelection().collapse(row, 0)
