@@ -137,14 +137,14 @@ export default {
     },
     activeModule(module){
       if (module.forbidden) return
-      if (module.type !== 'block') {
-        module.styleInspectResult = !module.styleInspectResult
-      }
       if (typeof module.handler === 'function') {
         module.handler(this, module)
         this.$nextTick(() => {
           this.saveCurrentRange()
           this.styleInspect()
+          if (module.type !== 'block') {
+            module.styleInspectResult = !module.styleInspectResult
+          }
         })
         return
       }
