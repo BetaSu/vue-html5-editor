@@ -21,6 +21,6 @@
         </div>
     </div>
     <div class="content" ref="content" id="editor-content" :style="contentStyle" data-editor="content"
-         contenteditable @click="toggleDashboard(dashboard)">
+         contenteditable @click="toggleDashboard(dashboard)" v-drag-pic="handleDragPic">
     </div>
 </div>

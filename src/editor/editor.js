@@ -1,6 +1,7 @@
 import RangeHandler from '../range-handler'
 import './style.css'
 import template from './editor.html'
+import dragPic from './drag-pic'
 import styleInspectMap from './style-inspect-map'
 import inspectForBlock from './style-inspect-for-block'
 
@@ -27,6 +28,9 @@ export default {
       type: Boolean,
       default: true
     }
+  },
+  directives: {
+    dragPic
   },
   data(){
     return {
@@ -74,6 +78,12 @@ export default {
     }
   },
   methods: {
+    handleDragPic (file) {
+      if ((this.config['image'] && this.config['image'].drag !== false) || !this.config['image']) {
+        this.saveCurrentRange()
+        this.execCommand('insertImage', file)
+      }
+    },
     toggleFullScreen(){
       this.fullScreen = !this.fullScreen
     },
@@ -252,40 +262,6 @@ export default {
       }, false)
     }
 
-    // handle drag drop
-    if ((this.config['image'] && this.config['image'].drag !== false) || !this.config['image']) {
-      content.addEventListener("dragstart", function (e) {
-        console.log('dragstart', e)
-      }, false);
-
-      content.addEventListener("dragend", function (e) {
-        console.log('dragend', e)
-      }, false);
-
-      /* 放下目标节点时触发事件 */
-      content.addEventListener("dragover", function (e) {
-        event.preventDefault()
-        console.log('dragover', e)
-      }, false);
-
-      content.addEventListener("dragenter", function (e) {
-        console.log('dragenter', e)
-
-      }, false);
-
-      content.addEventListener("dragleave", function (e) {
-        // 当拖动元素离开可放置目标节点，重置其背景
-        console.log('dragleave', dragleave)
-
-      }, false);
-
-      content.addEventListener("drop", function (e) {
-        // 阻止默认动作（如打开一些元素的链接）
-        event.preventDefault();
-        console.log('drop', e)
-
-      }, false);
-    }
     this.$nextTick(() => {
       this.modules.forEach((module) => {
         if (typeof module.mounted === 'function') {
