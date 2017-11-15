@@ -1,5 +1,6 @@
 import polyfill from './util/polyfill-ie'
 import buildInModules from './modules/index'
+import buildInShortcut from './shortcut'
 import editor from './editor/editor'
 import i18nZhCn from './i18n/zh-cn'
 import i18nEnUs from './i18n/en-us'
@@ -94,7 +95,15 @@ class Editor {
     const locale = i18n[language]
 
     // shortcut
-    const shortcut = options.shortcut
+    options.shortcut = Object.assign(buildInShortcut, options.shortcut || {})
+    const shortcut = {}
+    Object.keys(options.shortcut).forEach(key => {
+      let item = options.shortcut[key]
+      let keyCode = item.keyCode
+      shortcut[keyCode] = shortcut[keyCode] || []
+      shortcut[keyCode].push(item)
+      item.name = key
+    })
 
     // commands
     const commands = options.commands

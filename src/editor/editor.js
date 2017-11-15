@@ -248,19 +248,20 @@ export default {
     window.addEventListener('touchend', this.touchHandler, false)
 
     // handle shortcur
-    if (this.shortcut !== false) {
-      content.addEventListener('keydown', (e) => {
-        if (e.keyCode === 9) {
-          e.preventDefault()
-          this.saveCurrentRange()
-          if (e.shiftKey) {
-            this.execCommand('outdent')
-          } else {
-            this.execCommand('smartIndent')
+    content.addEventListener('keydown', e => {
+      let item = this.shortcut[e.keyCode]
+      if (item && item.length) {
+        item.forEach(s => {
+          if (e.keyCode === s.keyCode && e.altKey === !!s.altKey && e.ctrlKey === !!s.ctrlKey && e.metaKey === !!s.metaKey && e.shiftKey === !!s.shiftKey) {
+            if (typeof s.handler === 'function') {
+              e.preventDefault()
+              this.saveCurrentRange()
+              s.handler(this)
+            }
           }
-        }
-      }, false)
-    }
+        })
+      }
+    }, false)
 
     this.$nextTick(() => {
       this.modules.forEach((module) => {

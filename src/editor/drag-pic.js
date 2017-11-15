@@ -1,3 +1,7 @@
+/*
+ * directive 支持拖拽 
+ * @value drop后返回文件的回调函数
+ **/
 
 const imgType = {
   'image/png': 1,
