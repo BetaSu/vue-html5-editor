@@ -1,9 +1,9 @@
 <div class="my-vue-editor" :class="{'full-screen':fullScreen}" :style="{'z-index':zIndex}">
     <div class="toolbar" :style="{'z-index':zIndex+1}" ref="toolbar" data-editor="toolbar">
-        <ul>
+        <ul class="tabs">
             <template v-for="module in modules">
               <template v-if="!module.hasTab">
-                <li :title="locale[module.i18n]" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)">
+                <li :title="locale[module.i18n]" class="tab" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)">
                   <span class="icon" :class="module.icon"></span>
                 </li>
               </template>

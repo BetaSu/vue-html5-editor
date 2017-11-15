@@ -1,6 +1,5 @@
 /*
- * directive 支持拖拽 
- * @value drop后返回文件的回调函数
+ * directive drag and drop pic
  **/
 
 const imgType = {

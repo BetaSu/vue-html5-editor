@@ -1,5 +1,6 @@
 /*
- * inspect whether the cursor is in such modules
+ * block means module which crate a new element in the position of cursor
+ * like todo,quote,image...
  **/
 
 export default {

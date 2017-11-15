@@ -2,7 +2,7 @@ import RangeHandler from '../range-handler'
 import './style.css'
 import template from './editor.html'
 import dragPic from './drag-pic'
-import styleInspectMap from './style-inspect-map'
+import inspectForWrapper from './style-inspect-for-wrapper'
 import inspectForBlock from './style-inspect-for-block'
 
 export default {
@@ -166,38 +166,55 @@ export default {
       if (this.range) {
         this.activeModules = []
         let texts = new RangeHandler(this.range, this).getAllTextNodesInRange()
-        let blockInspectFinish = false
+        let isBlockModule = false
         texts.forEach(text => {
           let node = text.parentNode
           Object.keys(inspectForBlock).forEach(moduleName => {
             if (inspectForBlock[moduleName](node)) {
               this.activeModules.push(moduleName)
-              blockInspectFinish = true
-            }
+              isBlockModule = true
+            } 
           })
-          if (!blockInspectFinish) {
-            this.activeModules.push(styleInspectMap[node.nodeName] || 'normal')
+          // current target is not a block type module
+          if (!isBlockModule) {
+            let wrapperInspectResult = inspectForWrapper(node)
+            if (wrapperInspectResult.length) {
+              this.activeModules.push(wrapperInspectResult)
+            }
           }
         })
         if (texts.length === 0 && this.range.collapsed) {
-          Object.keys(inspectForBlock).forEach(moduleName => {
-            if (inspectForBlock[moduleName](this.range.commonAncestorContainer)) {
-              this.activeModules.push(moduleName)
-            }
-          })
+          let node = this.range.commonAncestorContainer
+          let wrapperInspectResult = inspectForWrapper(node)
+          if (wrapperInspectResult.length) {
+            this.activeModules.push(wrapperInspectResult)
+          } else {
+            Object.keys(inspectForBlock).forEach(moduleName => {
+              if (inspectForBlock[moduleName](node)) {
+                this.activeModules.push(moduleName)
+              }
+            })
+          }
         }
         if (this.activeModules.length === 1) {
-          let activeModuleIsBlockModule = inspectForBlock[this.activeModules[0]]
+          let activeOne = this.activeModules[0]
+          // is wrapper type module
+          if (Array.isArray(activeOne)) {
+            this.$set(this.activeModules, 0, activeOne)
+            activeOne.forEach((key, index) => {
+              this.$set(this.activeModules, index, key)
+            })
+            this.activeModules = activeOne
+          }
+          // is block type module
+          let activeModuleIsBlockModule = inspectForBlock[activeOne]
           this.modules.forEach(module => {
             // can not use a block module inside another block module
             if (activeModuleIsBlockModule) {
-              if (module.type === 'block') {
-                module.forbidden = true
-              }
+              module.forbidden = true
             }
             module.styleInspectResult = false
-
-            if (module.name === this.activeModules[0]) {
+            if (this.activeModules.includes(module.name)) {
               module.styleInspectResult = true
               module.forbidden = false
             }
@@ -230,9 +247,6 @@ export default {
     content.addEventListener('keyup', e => {
       this.$emit('change', content.innerHTML)
       this.saveCurrentRange()
-      // if ([8, 13, 16, 18, 37, 38, 39, 40, 91].includes(e.keyCode)) {
-      //   this.styleInspect()
-      // }
       this.styleInspect()
     }, false)
     content.addEventListener('mouseout', (e) => {
@@ -247,7 +261,7 @@ export default {
     }
     window.addEventListener('touchend', this.touchHandler, false)
 
-    // handle shortcur
+    // handle shortcut
     content.addEventListener('keydown', e => {
       let item = this.shortcut[e.keyCode]
       if (item && item.length) {

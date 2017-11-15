@@ -355,6 +355,22 @@ const commands = {
         })
       c.init = true
     })
+  },
+  'fontStyle' (rh, arg) {
+    if (rh.range.collapsed) {
+      commands['formatBlock'](rh, arg)
+    } else {
+      console.log('else')
+      let texts = rh.getAllTextNodesInRange()
+      texts.forEach(text => {
+        let node = text.parentNode
+        let newTag = document.createElement(arg)
+        newTag.appendChild(text)
+        if (node.parentNode) {
+          node.parentNode.replaceChild(newTag, node)
+        }
+      })
+    }
   }
 }
 commands.insertImage = insertImage
