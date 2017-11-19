@@ -9,7 +9,7 @@
               </template>
               <template v-else>
                 <keep-alive>
-                  <li class="tab" :is="module.tabName" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)"></li>
+                  <li class="tab" :is="module.tabName" :activeItem="module.styleInspectResult" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)"></li>
                 </keep-alive>
               </template>
             </template>
@@ -21,6 +21,6 @@
         </div>
     </div>
     <div class="content" ref="content" id="editor-content" :style="contentStyle" data-editor="content"
-         contenteditable @click="toggleDashboard(dashboard)" v-drag-pic="handleDragPic">
+         contenteditable :data-editor-placeholder="placeholder" @click="toggleDashboard(dashboard)" v-drag-pic="handleDragPic">
     </div>
 </div>

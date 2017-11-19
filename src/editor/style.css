@@ -45,7 +45,6 @@
       padding: 0;
       margin: 0;
       border-bottom: 1px solid var(--border-color);
-
       & .tab {
         display: inline-block;
         cursor: pointer;

@@ -8,7 +8,14 @@ const wrapperTag = {
   'UL': 'ul',
   'LI': 'ul',
   'I': 'italic',
-  'B': 'bold'
+  'B': 'bold',
+  'H1': 'h1',
+  'H2': 'h2',
+  'H3': 'h3',
+  'H4': 'h4',
+  'H5': 'h5',
+  'P': 'main',
+  'DIV': 'main'
 }
 
 export default function (node) {

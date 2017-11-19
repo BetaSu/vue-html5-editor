@@ -134,6 +134,7 @@ const commands = {
     const range = rh.range
     const startContainer = range.startContainer
     const parent = rh.getParentBlockNode(startContainer)
+    let curLevel = rh.howManyNestAncestorSameTag(rh.range.commonAncestorContainer, 'UL')
     if (parent.dataset && parent.dataset.editor === 'content') {
       return document.execCommand('insertUnorderedList', false, arg)
     } else {
@@ -147,6 +148,7 @@ const commands = {
           let curIndent = pre.getAttribute('data-editor-siblingindentlevel')
           switch (curIndent) {
             case null:
+              if (curLevel >= 10) return
               pre.setAttribute('data-editor-siblingindentlevel', '10')
               document.execCommand('indent', false)
               break
@@ -155,6 +157,7 @@ const commands = {
               document.execCommand('insertUnorderedList', false, arg)
               break
             case '12':
+              if (curLevel >= 10) return
               pre.setAttribute('data-editor-siblingindentlevel', '10')
               document.execCommand('indent', false)
               break
@@ -162,6 +165,7 @@ const commands = {
           return
         }
         if (pre && pre.nodeName === 'UL') {
+          if (curLevel >= 10) return
           return document.execCommand('indent', false)
         }
         return document.execCommand('insertUnorderedList', false, arg)
@@ -170,7 +174,15 @@ const commands = {
 
       }
     }
+    if (curLevel >= 10) return
     document.execCommand('indent', false)
+  },
+  'indent' (rh, arg) {
+    let node = rh.range.commonAncestorContainer
+    let curLevel = rh.howManyNestAncestorSameTag(node, 'BLOCKQUOTE')
+    // max level == 10
+    if (curLevel >= 10) return
+    document.execCommand('indent', false, arg)
   },
   // treat normal indent and list indent differently
   'smartIndent' (rh, arg) {
@@ -188,7 +200,7 @@ const commands = {
         return commands['listIndent'](rh, arg)
       }
       startContainer.setAttribute('data-editor-ulNum', ulNum)
-      document.execCommand('indent', false, arg)
+      commands['indent'](rh, arg)
     }
   },
   // only set contenteditable:false in parent node can child node trigger keydown listener
@@ -256,9 +268,11 @@ const commands = {
     })
   },
   'todo' (rh, afterWhich) {
-    let row
+    let row = rh.newRow({
+      br: true
+    })
     afterWhich = afterWhich || rh.range.commonAncestorContainer
-    if (afterWhich) {
+    if (afterWhich && (!afterWhich.dataset || (afterWhich.dataset && afterWhich.dataset.editor !== 'content'))) {
       let targetIndex
       let startIndex
       let list = afterWhich.parentNode.childNodes
@@ -277,10 +291,10 @@ const commands = {
         }
       })
       targetIndex = targetIndex === undefined ? startIndex + 1 : targetIndex
-      row = rh.newRow({
-        br: true
-      })
       afterWhich.parentNode.insertBefore(row, list[targetIndex])
+      rh.getSelection().collapse(row, 0)
+    } else {
+      afterWhich.appendChild(row, 0)
       rh.getSelection().collapse(row, 0)
     }
     let todoId = rh.createRandomId('todo')
@@ -357,20 +371,21 @@ const commands = {
     })
   },
   'fontStyle' (rh, arg) {
-    if (rh.range.collapsed) {
-      commands['formatBlock'](rh, arg)
-    } else {
-      console.log('else')
-      let texts = rh.getAllTextNodesInRange()
-      texts.forEach(text => {
-        let node = text.parentNode
-        let newTag = document.createElement(arg)
-        newTag.appendChild(text)
-        if (node.parentNode) {
-          node.parentNode.replaceChild(newTag, node)
-        }
-      })
-    }
+    commands['formatBlock'](rh, arg)
+    // if (rh.range.collapsed) {
+    //   commands['formatBlock'](rh, arg)
+    // } else {
+    //   console.log('else')
+    //   let texts = rh.getAllTextNodesInRange()
+    //   texts.forEach(text => {
+    //     let node = text.parentNode
+    //     let newTag = document.createElement(arg)
+    //     newTag.appendChild(text)
+    //     if (node.parentNode) {
+    //       node.parentNode.replaceChild(newTag, node)
+    //     }
+    //   })
+    // }
   }
 }
 commands.insertImage = insertImage

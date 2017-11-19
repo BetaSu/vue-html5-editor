@@ -104,13 +104,16 @@ class Editor {
       shortcut[keyCode].push(item)
       item.name = key
     })
+    
+    // placeholder
+    const placeholder = options.placeholder
 
     // commands
     const commands = options.commands
 
     const compo = mixin(editor, {
       data () {
-        return {modules, locale, shortcut, commands, config}
+        return {modules, locale, shortcut, commands, config, placeholder}
       },
       components
     })

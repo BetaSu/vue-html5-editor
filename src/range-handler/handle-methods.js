@@ -159,11 +159,12 @@ const m = {
    * @return {num} number
    **/
   howManyNestAncestorSameTag (node, ancestorNodeName) {
-    let num = node.nodeName === ancestorNodeName.toUpperCase() ? 1 : 0
-    let curNode = node
-    while (curNode.parentNode && curNode.parentNode.nodeName === ancestorNodeName) {
-      num++
-      curNode = curNode.parentNode
+    let num = 0
+    while (node && (!node.dataset || (node.dataset.editor !== 'content'))) {
+      if (node.nodeName === ancestorNodeName) {
+        num++
+      }
+      node = node.parentNode
     }
     return num
   },

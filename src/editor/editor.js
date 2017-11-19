@@ -173,7 +173,7 @@ export default {
             if (inspectForBlock[moduleName](node)) {
               this.activeModules.push(moduleName)
               isBlockModule = true
-            } 
+            }
           })
           // current target is not a block type module
           if (!isBlockModule) {
@@ -185,44 +185,57 @@ export default {
         })
         if (texts.length === 0 && this.range.collapsed) {
           let node = this.range.commonAncestorContainer
-          let wrapperInspectResult = inspectForWrapper(node)
-          if (wrapperInspectResult.length) {
-            this.activeModules.push(wrapperInspectResult)
-          } else {
-            Object.keys(inspectForBlock).forEach(moduleName => {
-              if (inspectForBlock[moduleName](node)) {
-                this.activeModules.push(moduleName)
-              }
-            })
+          let isBlockModule = false
+          Object.keys(inspectForBlock).forEach(moduleName => {
+            if (inspectForBlock[moduleName](node)) {
+              this.activeModules.push(moduleName)
+              isBlockModule = true
+            }
+          })
+          if (!isBlockModule) {
+            let wrapperInspectResult = inspectForWrapper(node)
+            if (wrapperInspectResult.length) {
+              this.activeModules.push(wrapperInspectResult)
+            }
           }
         }
         if (this.activeModules.length === 1) {
           let activeOne = this.activeModules[0]
           // is wrapper type module
           if (Array.isArray(activeOne)) {
-            this.$set(this.activeModules, 0, activeOne)
             activeOne.forEach((key, index) => {
               this.$set(this.activeModules, index, key)
             })
-            this.activeModules = activeOne
           }
           // is block type module
           let activeModuleIsBlockModule = inspectForBlock[activeOne]
           this.modules.forEach(module => {
             // can not use a block module inside another block module
             if (activeModuleIsBlockModule) {
-              module.forbidden = true
+              if (module.type !== 'fn') {
+                module.forbidden = true 
+              }
+            } else {
+              module.forbidden = false
             }
             module.styleInspectResult = false
             if (this.activeModules.includes(module.name)) {
               module.styleInspectResult = true
-              module.forbidden = false
+            }
+            if (Array.isArray(module.contains)) {
+              this.activeModules.forEach(a => {
+                if (module.contains.includes(a)) {
+                  module.styleInspectResult = a
+                }
+              })
             }
           })
         } else {
           this.modules.forEach(module => {
-            module.forbidden = false
-            module.styleInspectResult = false
+            if (module.type !== 'fn') {
+              module.forbidden = false
+              module.styleInspectResult = false 
+            }
           })
         }
       }
