@@ -13,7 +13,6 @@ const wrapperTag = {
 }
 
 export default function (node) {
-  console.log('wrap', node)
   let result = []
   while (node && ((node.dataset && node.dataset.editor !== 'content') || !node.dataset)) {
     let inspectResult = wrapperTag[node.nodeName]

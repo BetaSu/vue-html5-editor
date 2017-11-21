@@ -165,7 +165,7 @@ export default {
       }
     },
     styleInspect () {
-      // console.log('styleInspect')
+      console.log('styleInspect')
       if (this.range) {
         // find all active modules in range
         this.activeModules = []
@@ -175,11 +175,21 @@ export default {
           if (node.nodeType === Node.TEXT_NODE) {
             texts.push(node)
           }
-          // is a new row with no content
           if (node.nodeType === Node.ELEMENT_NODE) {
-            let styleInspectResult = inspectForStyle(node)
-            if (styleInspectResult.length) {
-              this.activeModules.push(styleInspectResult)
+            let isBlockModule = false
+            // is in a block 
+            Object.keys(inspectForBlock).forEach(moduleName => {
+              if (inspectForBlock[moduleName](node)) {
+                this.activeModules.push(moduleName)
+                isBlockModule = true
+              }
+            })
+            // is a new row with no content
+            if (!isBlockModule) {
+              let styleInspectResult = inspectForStyle(node)
+              if (styleInspectResult.length) {
+                this.activeModules.push(styleInspectResult)
+              }
             }
           }
         }
