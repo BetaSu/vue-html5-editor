@@ -1,6 +1,6 @@
 {
   "name": "vue-editor-icourt",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "A WYSIWYG text editor base on html5 and vue",
   "repository": {
     "type": "git",

@@ -14,12 +14,16 @@ const commands = {
         node.style[styleName] = arg[styleName]
       })
     }
-
-    // console.log('addStyle')
     if (!isObj(arg)) return
     const textNodes = rh.getAllTextNodesInRange()
     if (!textNodes.length) {
-      return
+      if (rh.range.collapsed) {
+        let node = rh.range.commonAncestorContainer
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          doAdd(node)
+          return
+        }
+      }
     }
     if (rh.range.collapsed && textNodes.length === 1) {
       let node = textNodes[0].parentNode
