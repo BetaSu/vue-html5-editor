@@ -11,11 +11,20 @@ const imgType = {
 
 export default {
   bind (el, binding, vnode) {
-    
+
+    // let onDragEnter = e => {
+    //   console.log('enter')
+    //   const selection = window.getSelection ? window.getSelection() : document.getSelection()
+    //   selection.removeAllRanges()
+    // }
     let onDragOver = e => {
       e.preventDefault()
       const selection = window.getSelection ? window.getSelection() : document.getSelection()
-      selection.collapse(e.target, 0)
+      try {
+        selection.collapse(e.target, 1)
+      } catch (e) {
+        selection.collapse(e.target, 0)
+      }
     }
     let onDragLeave = e => {
       e.preventDefault()
@@ -35,6 +44,7 @@ export default {
       }
     }
 
+    // el.addEventListener('dragenter', onDragEnter, false)
     el.addEventListener('dragover', onDragOver, false)
     el.addEventListener('dragleave', onDragLeave, false)
     el.addEventListener('drop', onDrop, false)

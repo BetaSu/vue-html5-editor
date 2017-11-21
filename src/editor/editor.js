@@ -97,6 +97,9 @@ export default {
     focus(){
       this.$refs.content.focus()
     },
+    blur(){
+      this.$refs.content.blur()
+    },
     toggleDashboard(dashboard){
       this.dashboard = this.dashboard === dashboard ? null : dashboard
     },
@@ -154,9 +157,9 @@ export default {
         this.$nextTick(() => {
           this.saveCurrentRange()
           this.styleInspect()
-          if (module.type !== 'block') {
-            module.styleInspectResult = !module.styleInspectResult
-          }
+          // if (module.type !== 'block') {
+          //   module.styleInspectResult = !module.styleInspectResult
+          // }
         })
         return
       }
@@ -177,7 +180,7 @@ export default {
           }
           if (node.nodeType === Node.ELEMENT_NODE) {
             let isBlockModule = false
-            // is in a block 
+            // is in a block
             Object.keys(inspectForBlock).forEach(moduleName => {
               if (inspectForBlock[moduleName](node)) {
                 this.activeModules.push(moduleName)
@@ -186,10 +189,12 @@ export default {
             })
             // is a new row with no content
             if (!isBlockModule) {
+              let wrapperInspectResult = inspectForWrapper(node)
               let styleInspectResult = inspectForStyle(node)
-              if (styleInspectResult.length) {
-                this.activeModules.push(styleInspectResult)
-              }
+              styleInspectResult.forEach((style) => {
+                wrapperInspectResult.push(style)
+              })
+              this.activeModules.push(wrapperInspectResult)
             }
           }
         }
@@ -220,6 +225,7 @@ export default {
             sameStyleMap[m] = sameStyleMap[m] ? sameStyleMap[m] + 1 : 1
           }
           if (Array.isArray(m)) {
+            m = Array.from(new Set(m))
             m.forEach(am => {
               sameStyleMap[am] = sameStyleMap[am] ? sameStyleMap[am] + 1 : 1
             })
@@ -250,6 +256,15 @@ export default {
             module.styleInspectResult = false
             if (this.activeModules.includes(module.name)) {
               module.styleInspectResult = true
+              if (module.exclude) {
+                this.modules.forEach(m => {
+                  if (module.exclude.includes(m.name)) {
+                    this.$nextTick(() => {
+                      m.forbidden = true
+                    })
+                  }
+                })
+              }
             }
             if (Array.isArray(module.contains)) {
               this.activeModules.forEach(a => {

@@ -211,32 +211,42 @@ const commands = {
   },
   'indent' (rh, arg) {
     let node = rh.range.commonAncestorContainer
-    let curLevel = rh.howManyNestAncestorSameTag(node, 'BLOCKQUOTE')
+    if (node.nodeType === Node.TEXT_NODE) {
+      node = node.parentNode
+    }
+    let nestNode = 'BLOCKQUOTE'
+    if (node.nodeName === 'LI' || node.nodeName === 'UL') {
+      nestNode = 'UL'
+    }
+    let curLevel = rh.howManyNestAncestorSameTag(node, nestNode)
     // max level == 10
     if (curLevel >= 10) return
     document.execCommand('indent', false, arg)
   },
   // treat normal indent and list indent differently
   'smartIndent' (rh, arg) {
+    // let startContainer = rh.range.startContainer
+    // const parent = rh.getParentBlockNode(startContainer)
+    // if (parent.nodeName === 'UL' || parent.nodeName === 'LI') {
+    //   commands['listIndent'](rh, arg)
+    // } else {
+    //   if (startContainer.nodeType === 3) {
+    //     startContainer = parent
+    //   }
+    //   const ulNum = rh.getNodeNum(startContainer, 'ul')
+    //   let pre_listNum = startContainer.getAttribute('data-editor-ulNum')
+    //   if (pre_listNum && Number(pre_listNum) < ulNum) {
+    //     return commands['listIndent'](rh, arg)
+    //   }
+    //   startContainer.setAttribute('data-editor-ulNum', ulNum)
+    //   commands['indent'](rh, arg)
+    // }
     let startContainer = rh.range.startContainer
-    const parent = rh.getParentBlockNode(startContainer)
-    if (parent.nodeName === 'UL' || parent.nodeName === 'LI') {
-      commands['listIndent'](rh, arg)
-    } else {
-      if (startContainer.nodeType === 3) {
-        startContainer = parent
-      }
-      const ulNum = rh.getNodeNum(startContainer, 'ul')
-      let pre_listNum = startContainer.getAttribute('data-editor-ulNum')
-      if (pre_listNum && Number(pre_listNum) < ulNum) {
-        return commands['listIndent'](rh, arg)
-      }
-      startContainer.setAttribute('data-editor-ulNum', ulNum)
-      commands['indent'](rh, arg)
-    }
+    commands['indent'](rh, arg)
   },
   // only set contenteditable:false in parent node can child node trigger keydown listener
   'quote' (rh, isInQuote) {
+    // console.log('quote!')
     if (isInQuote) {
       let node = rh.range.commonAncestorContainer
       node = node.nodeType === Node.TEXT_NODE ? node.parentNode : node
@@ -263,7 +273,7 @@ const commands = {
     let id = rh.createRandomId('quote')
     quoteBlock.setAttribute('data-editor-quote', id)
     quoteBlock.setAttribute('contenteditable', 'false')
-    texts.forEach(text => {
+    texts.forEach((text, index) => {
       const row = rh.newRow()
       row.appendChild(text)
       quoteBlock.appendChild(row)
@@ -272,9 +282,7 @@ const commands = {
     container.appendChild(br)
     commands['insertHTML'](rh, container.innerHTML)
     const quote = document.querySelector(`[data-editor-quote='${id}']`)
-    rh.getSelection().collapse(quote.firstElementChild, 0)
-
-
+    rh.getSelection().collapse(quote.lastElementChild, quote.lastElementChild.innerText ? 1 : 0)
   },
   'initQuote' (rh, arg) {
     document.addEventListener('keydown', e => {
@@ -284,7 +292,7 @@ const commands = {
           if (e.target.innerText.replace('\n', '') === '') {
             let parent = e.target.parentNode
             let sibling = parent.nextSibling
-            if (!sibling) {
+            if (!sibling || sibling.innerHTML === '') {
               sibling = rh.newRow({
                 br: true
               })
@@ -299,18 +307,27 @@ const commands = {
             rh.getSelection().collapse(sibling, 0)
           }
         }
-        if (e.keyCode === 8 && e.target.innerText.replace('\n', '') === '') {
-          e.preventDefault()
-          let quote = e.target.parentNode
-          let sibling = e.target.previousSibling
-          quote.removeChild(e.target)
-          let num = quote.querySelectorAll('div')
-          if (!num.length || (num.length === 1 && num[0].innerText === '')) {
-            const row = rh.newRow()
-            quote.parentNode.replaceChild(row, quote)
-            rh.getSelection().collapse(row, 0)
+        if (e.keyCode === 8) {
+          if (e.target.innerText.replace('\n', '') === '') {
+            e.preventDefault()
+            let quote = e.target.parentNode
+            let sibling = e.target.previousSibling
+            quote.removeChild(e.target)
+            let num = quote.querySelectorAll('div')
+            if (!num.length || (num.length === 1 && num[0].innerText === '')) {
+              const row = rh.newRow()
+              quote.parentNode.replaceChild(row, quote)
+              rh.getSelection().collapse(row, 0)
+            } else {
+              rh.getSelection().collapse(sibling, 1)
+            }
           } else {
-            rh.getSelection().collapse(sibling, 1)
+            if (rh.range.collapsed) {
+              let s = rh.getSelection()
+              if (s.anchorOffset === 0) {
+                e.preventDefault()
+              }
+            }
           }
         }
       }
@@ -434,6 +451,46 @@ const commands = {
     //       node.parentNode.replaceChild(newTag, node)
     //     }
     //   })
+    // }
+  },
+  'underline' (rh, arg) {
+    document.execCommand('underline', false, arg)
+    // if (!rh.range.collapsed) {
+    //   document.execCommand('underline', false, arg)
+    // } else {
+    //   let text = rh.range.commonAncestorContainer
+    //   let node = text
+    //   if (text.nodeType === Node.TEXT_NODE) {
+    //     if (!text.parentNode.dataset || text.parentNode.dataset !== 'content') {
+    //       node = text.parentNode
+    //     }
+    //   }
+    //   console.log('find', rh.findSpecialAncestor(node, 'u'))
+    //   if (rh.findSpecialAncestor(node, 'u')) {
+    //     console.log(' in')
+    //     let ctn = text.nodeValue || text.innerText
+    //     // at the end of u
+    //     if (rh.getSelection().focusOffset === ctn.length) {
+    //       let span = document.createElement('span')
+    //       span.innerHTML = '&#8203;'
+    //       rh.insertAfter(span, node)
+    //       rh.getSelection().collapse(span, 1)
+    //       return
+    //     } else {
+    //       if (ctn.replace(/\u200B/g, '') === '') {
+    //         node.parentNode.removeChild(node)
+    //         return
+    //       }
+    //       console.log('middle')
+    //       return
+    //     }
+    //   }
+    //   let newUnderline = document.createElement('u')
+    //   newUnderline.innerHTML = '&#8203;'
+    //   if (text.parentNode) {
+    //     rh.insertAfter(newUnderline, text)
+    //     rh.getSelection().collapse(newUnderline, 1)
+    //   }
     // }
   }
 }
