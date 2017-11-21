@@ -3,6 +3,7 @@ import './style.css'
 import template from './editor.html'
 import dragPic from './drag-pic'
 import inspectForWrapper from './style-inspect-for-wrapper'
+import inspectForStyle from './style-inspect-for-style'
 import inspectForBlock from './style-inspect-for-block'
 
 export default {
@@ -125,6 +126,7 @@ export default {
         end = end.nodeType === Node.TEXT_NODE ? end.parentNode : end
         if (content.contains(start) && content.contains(end)) {
           this.range = range
+          // console.log('range is:', range)
           break
         }
       }
@@ -163,9 +165,24 @@ export default {
       }
     },
     styleInspect () {
+      // console.log('styleInspect')
       if (this.range) {
+        // find all active modules in range
         this.activeModules = []
         let texts = new RangeHandler(this.range, this).getAllTextNodesInRange()
+        if (texts.length === 0 && this.range.collapsed) {
+          let node = this.range.commonAncestorContainer
+          if (node.nodeType === Node.TEXT_NODE) {
+            texts.push(node)
+          }
+          // is a new row with no content
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            let styleInspectResult = inspectForStyle(node)
+            if (styleInspectResult.length) {
+              this.activeModules.push(styleInspectResult)
+            }
+          }
+        }
         let isBlockModule = false
         texts.forEach(text => {
           let node = text.parentNode
@@ -178,42 +195,44 @@ export default {
           // current target is not a block type module
           if (!isBlockModule) {
             let wrapperInspectResult = inspectForWrapper(node)
-            if (wrapperInspectResult.length) {
-              this.activeModules.push(wrapperInspectResult)
-            }
+            let styleInspectResult = inspectForStyle(node)
+            styleInspectResult.forEach((style) => {
+              wrapperInspectResult.push(style)
+            })
+            this.activeModules.push(wrapperInspectResult)
           }
         })
-        if (texts.length === 0 && this.range.collapsed) {
-          let node = this.range.commonAncestorContainer
-          let isBlockModule = false
-          Object.keys(inspectForBlock).forEach(moduleName => {
-            if (inspectForBlock[moduleName](node)) {
-              this.activeModules.push(moduleName)
-              isBlockModule = true
-            }
-          })
-          if (!isBlockModule) {
-            let wrapperInspectResult = inspectForWrapper(node)
-            if (wrapperInspectResult.length) {
-              this.activeModules.push(wrapperInspectResult)
-            }
+
+        // merge same style inspect result
+        let sameStyleMap = {}
+        this.activeModules.forEach(m => {
+          if (typeof m === 'string') {
+            sameStyleMap[m] = sameStyleMap[m] ? sameStyleMap[m] + 1 : 1
           }
-        }
-        if (this.activeModules.length === 1) {
-          let activeOne = this.activeModules[0]
-          // is wrapper type module
-          if (Array.isArray(activeOne)) {
-            activeOne.forEach((key, index) => {
-              this.$set(this.activeModules, index, key)
+          if (Array.isArray(m)) {
+            m.forEach(am => {
+              sameStyleMap[am] = sameStyleMap[am] ? sameStyleMap[am] + 1 : 1
             })
           }
+        })
+        let mergedStyle = []
+        Object.keys(sameStyleMap).forEach(m => {
+          if (sameStyleMap[m] === this.activeModules.length) {
+            mergedStyle.push(m)
+          }
+        })
+        this.activeModules = mergedStyle
+
+        // handle style inspect logic
+        if (this.activeModules.length) {
+          let firstOne = this.activeModules[0]
           // is block type module
-          let activeModuleIsBlockModule = inspectForBlock[activeOne]
+          let activeModuleIsBlockModule = inspectForBlock[firstOne]
           this.modules.forEach(module => {
             // can not use a block module inside another block module
             if (activeModuleIsBlockModule) {
-              if (module.type !== 'fn') {
-                module.forbidden = true 
+              if (module.type !== 'fn' && !this.activeModules.includes(module.name)) {
+                module.forbidden = true
               }
             } else {
               module.forbidden = false
@@ -234,7 +253,7 @@ export default {
           this.modules.forEach(module => {
             if (module.type !== 'fn') {
               module.forbidden = false
-              module.styleInspectResult = false 
+              module.styleInspectResult = false
             }
           })
         }
@@ -252,11 +271,14 @@ export default {
     const content = this.$refs.content
     const toolbar = this.$refs.toolbar
     content.innerHTML = this.content
-    content.addEventListener('mouseup', () => {
-      this.saveCurrentRange()
+    // content.addEventListener('click', this.saveCurrentRange, false)
+    content.addEventListener('mouseup', e => {
+      if (content.contains(e.target)) {
+        this.saveCurrentRange()
+      }
       this.styleInspect()
     }, false)
-    toolbar.addEventListener('mouseup', this.saveCurrentRange, false)
+    toolbar.addEventListener('mousedown', this.saveCurrentRange, false)
     content.addEventListener('keyup', e => {
       this.$emit('change', content.innerHTML)
       this.saveCurrentRange()
@@ -270,6 +292,7 @@ export default {
     this.touchHandler = (e) => {
       if (content.contains(e.target)) {
         this.saveCurrentRange()
+        this.styleInspect()
       }
     }
     window.addEventListener('touchend', this.touchHandler, false)

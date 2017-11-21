@@ -1,11 +1,39 @@
 import insertImage from './insertImage'
+import { isObj } from '../util'
 
 const commands = {
-  fontSize (rh, arg) {
-    // 重新实现，改为直接修改样式
+  /*
+   * add a style attribute in range
+   * @param {obj} arg include
+   *      key: style name
+   *      value: style value
+   **/
+  addStyle (rh, arg) {
+    function doAdd(node) {
+      Object.keys(arg).forEach(styleName => {
+        node.style[styleName] = arg[styleName]
+      })
+    }
+
+    // console.log('addStyle')
+    if (!isObj(arg)) return
     const textNodes = rh.getAllTextNodesInRange()
     if (!textNodes.length) {
       return
+    }
+    if (rh.range.collapsed && textNodes.length === 1) {
+      let node = textNodes[0].parentNode
+      if (node) {
+        if (node.dataset && node.dataset.editor === 'content') {
+          let newRow = rh.newRow({tag: 'p'})
+          newRow.innerText = textNodes[0].nodeValue
+          node.replaceChild(newRow, textNodes[0])
+          doAdd(newRow)
+          return
+        }
+        doAdd(node)
+        return
+      }
     }
     if (textNodes.length === 1 && textNodes[0] === rh.range.startContainer
       && textNodes[0] === rh.range.endContainer) {
@@ -14,11 +42,11 @@ const commands = {
         && rh.range.endOffset === textNode.textContent.length) {
         if (textNode.parentNode.childNodes.length === 1
           && rh.isInlineElement(textNode.parentNode)) {
-          textNode.parentNode.style.fontSize = arg
+          doAdd(textNode.parentNode)
           return
         }
         const span = document.createElement('span')
-        span.style.fontSize = arg
+        doAdd(span)
         textNode.parentNode.insertBefore(span, textNode)
         span.appendChild(textNode)
         return
@@ -26,7 +54,7 @@ const commands = {
       const span = document.createElement('span')
       span.innerText = textNode.textContent.substring(
         rh.range.startOffset, rh.range.endOffset)
-      span.style.fontSize = arg
+      doAdd(span)
       const frontPart = document.createTextNode(
         textNode.textContent.substring(0, rh.range.startOffset))
       textNode.parentNode.insertBefore(frontPart, textNode)
@@ -42,10 +70,10 @@ const commands = {
         if (rh.range.startOffset === 0) {
           if (textNode.parentNode.childNodes.length === 1
             && rh.isInlineElement(textNode.parentNode)) {
-            textNode.parentNode.style.fontSize = arg
+            doAdd(textNode.parentNode)
           } else {
             const span = document.createElement('span')
-            span.style.fontSize = arg
+            doAdd(span)
             textNode.parentNode.insertBefore(span, textNode)
             span.appendChild(textNode)
           }
@@ -54,7 +82,7 @@ const commands = {
         const span = document.createElement('span')
         textNode.textContent = textNode.textContent.substring(
           0, rh.range.startOffset)
-        span.style.fontSize = arg
+        doAdd(span)
         textNode.parentNode.insertBefore(span, textNode)
         rh.range.setStart(textNode, 0)
         return
@@ -63,10 +91,10 @@ const commands = {
         if (rh.range.endOffset === textNode.textContent.length) {
           if (textNode.parentNode.childNodes.length === 1
             && rh.isInlineElement(textNode.parentNode)) {
-            textNode.parentNode.style.fontSize = arg
+            doAdd(textNode.parentNode)
           } else {
             const span = document.createElement('span')
-            span.style.fontSize = arg
+            doAdd(span)
             textNode.parentNode.insertBefore(span, textNode)
             span.appendChild(textNode)
           }
@@ -74,7 +102,7 @@ const commands = {
         }
         const span = document.createElement('span')
         textNode.textContent = textNode.textContent.substring(rh.range.endOffset)
-        span.style.fontSize = arg
+        doAdd(span)
         textNode.parentNode.insertBefore(span, textNode)
         span.appendChild(textNode)
         rh.range.setStart(textNode, textNode.textContent.length)
@@ -82,12 +110,12 @@ const commands = {
       }
       if (textNode.parentNode.childNodes.length === 1
         && rh.isInlineElement(textNode.parentNode)) {
-        textNode.parentNode.style.fontSize = arg
+        doAdd(textNode.parentNode)
         return
       }
 
       const span = document.createElement('span')
-      span.style.fontSize = arg
+      doAdd(span)
       textNode.parentNode.insertBefore(span, textNode)
       span.appendChild(textNode)
     })
@@ -204,14 +232,30 @@ const commands = {
     }
   },
   // only set contenteditable:false in parent node can child node trigger keydown listener
-  'quote' (rh, arg) {
+  'quote' (rh, isInQuote) {
+    if (isInQuote) {
+      let node = rh.range.commonAncestorContainer
+      node = node.nodeType === Node.TEXT_NODE ? node.parentNode : node
+      let quote = rh.findSpecialAncestor(node, '[data-editor-quote]')
+      if (quote) {
+        let texts = rh.getDescendantTextNodes(quote)
+        let newContainer = document.createElement('div')
+        texts.forEach(text => {
+          let row = rh.newRow()
+          row.appendChild(text)
+          newContainer.appendChild(row)
+        })
+        quote.parentNode.replaceChild(newContainer, quote)
+      }
+      return
+    }
     const texts = rh.getAllTextNodesInRange()
     if (!texts.length) {
       texts.push(document.createTextNode(''))
     }
     let container = document.createElement('div')
     let br = document.createElement('br')
-    let quoteBlock = document.createElement(arg)
+    let quoteBlock = document.createElement('section')
     let id = rh.createRandomId('quote')
     quoteBlock.setAttribute('data-editor-quote', id)
     quoteBlock.setAttribute('contenteditable', 'false')
@@ -252,6 +296,7 @@ const commands = {
           }
         }
         if (e.keyCode === 8 && e.target.innerText.replace('\n', '') === '') {
+          e.preventDefault()
           let quote = e.target.parentNode
           let sibling = e.target.previousSibling
           quote.removeChild(e.target)
@@ -261,7 +306,7 @@ const commands = {
             quote.parentNode.replaceChild(row, quote)
             rh.getSelection().collapse(row, 0)
           } else {
-            rh.getSelection().collapse(sibling, 0)
+            rh.getSelection().collapse(sibling, 1)
           }
         }
       }
@@ -285,7 +330,7 @@ const commands = {
           return
         }
         if (startIndex !== undefined && targetIndex === undefined) {
-          if (child.getAttribute('data-editor-todo')) {
+          if (child && child.getAttribute('data-editor-todo')) {
             targetIndex = index
           }
         }

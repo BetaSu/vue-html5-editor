@@ -126,7 +126,7 @@ const m = {
     return inlineNodeNames.includes(node.nodeName)
   },
   /*
-   * func find all specify nodes in an ancestor through search opinions(unique attributes)
+   * find all specify nodes in an ancestor through search opinions(unique attributes)
    * @param node
    * @param {obj}
    *     must have key 'tagName'
@@ -168,6 +168,26 @@ const m = {
     }
     return num
   },
+
+  /*
+   * find an ancestor element through selector
+   * @param {node} target node
+   * @param {str} ancestor element's selector
+   * @return ancestor element
+   **/
+  findSpecialAncestor (node, selector) {
+    let result
+    while (node && !result && (!node.dataset || (node.dataset.editor !== 'content'))) {
+      let ancestor = node.parentNode.querySelector(selector)
+      if (ancestor) {
+        result = ancestor
+      } else {
+        node = node.parentNode
+      }
+    }
+    return result
+  },
+
   getNodeNum (ancestor, nodeName) {
     return ancestor.querySelectorAll(nodeName).length
   },
