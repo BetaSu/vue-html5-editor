@@ -366,7 +366,7 @@ const commands = {
     let row = rh.newRow({
       br: true
     })
-    afterWhich = afterWhich || rh.range.commonAncestorContainer
+    afterWhich = rh.getRow(afterWhich || rh.range.commonAncestorContainer)
     if (afterWhich && afterWhich !== rh.editZone()) {
       let targetIndex
       let startIndex
