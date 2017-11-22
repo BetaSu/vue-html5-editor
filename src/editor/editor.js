@@ -37,8 +37,7 @@ export default {
     return {
       modules: {},
       activeModules: [],
-      fullScreen: false,
-      dashboard: null
+      fullScreen: false
     }
   },
   watch: {
@@ -100,9 +99,6 @@ export default {
     blur(){
       this.$refs.content.blur()
     },
-    toggleDashboard(dashboard){
-      this.dashboard = this.dashboard === dashboard ? null : dashboard
-    },
     execCommand(command, arg, execOnly){
       if (!execOnly) {
         this.restoreSelection()
@@ -158,9 +154,6 @@ export default {
         this.$nextTick(() => {
           this.saveCurrentRange()
           this.styleInspect()
-          // if (module.type !== 'block') {
-          //   module.styleInspectResult = !module.styleInspectResult
-          // }
         })
         return
       }
@@ -291,7 +284,6 @@ export default {
     const content = this.$refs.content
     const toolbar = this.$refs.toolbar
     content.innerHTML = this.content
-    // content.addEventListener('click', this.saveCurrentRange, false)
     content.addEventListener('mouseup', e => {
       if (content.contains(e.target)) {
         this.saveCurrentRange()
@@ -319,6 +311,7 @@ export default {
 
     // handle shortcut
     content.addEventListener('keydown', e => {
+      this.execCommand('keydown', e, true)
       let item = this.shortcut[e.keyCode]
       if (item && item.length) {
         item.forEach(s => {

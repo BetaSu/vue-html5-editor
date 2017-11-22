@@ -1,3 +1,5 @@
+import am from './assist-methods'
+
 const m = {
   /**
    * func add every elements of extArr to sourceArr.
@@ -160,7 +162,7 @@ const m = {
    **/
   howManyNestAncestorSameTag (node, ancestorNodeName) {
     let num = 0
-    while (node && (!node.dataset || (node.dataset.editor !== 'content'))) {
+    while (node && (node !== am.editZone())) {
       if (node.nodeName === ancestorNodeName) {
         num++
       }
@@ -181,7 +183,7 @@ const m = {
    **/
   findSpecialAncestor (node, selector, firstOne = true, border) {
     let result
-    let contentZone = document.querySelector('[data-editor="content"]')
+    let contentZone = am.editZone()
     border = border || contentZone
     while (node && (firstOne ? !result : true) && (node !== border)) {
       if (!border || !border.contains(node)) return
@@ -261,8 +263,7 @@ const m = {
    * @return {node} row
    **/
   getRow (node) {
-    console.log('get')
-    let rows = Array.from(document.querySelector('[data-editor="content"]').querySelectorAll('p'))
+    let rows = Array.from(am.editZone().querySelectorAll('p'))
     let result
     rows.forEach(row => {
       if (row.contains(node)) {

@@ -46,6 +46,16 @@ const methods = {
    **/
   createRandomId (preffix) {
     return `${preffix || 'id'}-${Math.random() * 1000 + new Date().getTime()}`
+  },
+  /*
+   * return edit zone element
+   **/
+  editZone () {
+    if (methods.editZone_cache) {
+      return methods.editZone_cache
+    }
+    methods.editZone_cache = document.querySelector('[data-editor="content"]')
+    return methods.editZone_cache
   }
 }
 

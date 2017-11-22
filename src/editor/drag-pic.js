@@ -6,7 +6,8 @@ const imgType = {
   'image/png': 1,
   'image/jpeg': 1,
   'image/gif': 1,
-  'image/jpg': 1
+  'image/jpg': 1,
+  'image/svg': 1
 }
 
 export default {

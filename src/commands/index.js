@@ -28,7 +28,7 @@ const commands = {
     if (rh.range.collapsed && textNodes.length === 1) {
       let node = textNodes[0].parentNode
       if (node) {
-        if (node.dataset && node.dataset.editor === 'content') {
+        if (node === rh.editZone()) {
           let newRow = rh.newRow({tag: 'p'})
           newRow.innerText = textNodes[0].nodeValue
           node.replaceChild(newRow, textNodes[0])
@@ -146,7 +146,6 @@ const commands = {
   },
   'insertHTML' (rh, arg) {
     if (document.execCommand('insertHTML', false, arg)) {
-      console.log('insert html!')
       return
     }
     // hack
@@ -168,7 +167,7 @@ const commands = {
     const startContainer = range.startContainer
     const parent = rh.getParentBlockNode(startContainer)
     let curLevel = rh.howManyNestAncestorSameTag(rh.range.commonAncestorContainer, 'UL')
-    if (parent.dataset && parent.dataset.editor === 'content') {
+    if (parent === rh.editZone()) {
       return document.execCommand('insertUnorderedList', false, arg)
     } else {
       if (parent.nodeName === 'LI') {
@@ -294,7 +293,7 @@ const commands = {
         return
       }
       let curRow = rh.getRow(text)
-      if (!quoteRows.includes(curRow)) {
+      if (curRow && !quoteRows.includes(curRow)) {
         quoteRows.push(curRow)
       }
     })
@@ -309,7 +308,7 @@ const commands = {
     container.appendChild(br)
     let aNode = rh.range.commonAncestorContainer
     // if range is not at edit zone, insertHTML would run fail
-    if (!aNode.dataset || aNode.dataset.editor !== 'content') {
+    if (aNode !== rh.editZone()) {
       aNode.parentNode.removeChild(aNode)
     }
     commands['insertHTML'](rh, container.innerHTML)
@@ -368,7 +367,7 @@ const commands = {
       br: true
     })
     afterWhich = afterWhich || rh.range.commonAncestorContainer
-    if (afterWhich && (!afterWhich.dataset || (afterWhich.dataset && afterWhich.dataset.editor !== 'content'))) {
+    if (afterWhich && afterWhich !== rh.editZone()) {
       let targetIndex
       let startIndex
       let list = afterWhich.parentNode.childNodes
@@ -529,13 +528,14 @@ const commands = {
     // }
   },
   'delete' (rh, e) {
+    console.log('delete')
     // restore first row
     let node = rh.range.commonAncestorContainer
     node = rh.findSpecialAncestor(node, 'p')
     if (!node) return
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (node.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
       if (node) {
-        let firstRow = document.querySelector('[data-editor="content"]').firstElementChild
+        let firstRow = rh.editZone().firstElementChild
         if (firstRow === node) {
           e.preventDefault()
         } else if (firstRow.contains(node)) {
@@ -562,7 +562,7 @@ const commands = {
           }
         }
       })
-      // cursor focus on previous row's input when previous row is todo
+      // cursor focus on previous row's input if previous row is todo
       if (preRow && preRow.dataset && preRow.dataset.editorTodo) {
         e.preventDefault()
         let input = preRow.querySelector('input[type="text"]')
@@ -571,6 +571,14 @@ const commands = {
         }
       }
     }
+  },
+  'keydown' (rh, e) {
+    // maintain row
+    if (rh.range.collapsed) {
+      let node = rh.range.commonAncestorContainer
+      // if (node.nodeType === Node.TEXT_NODE && )
+    }
+    console.log('rh', rh.range)
   }
 }
 commands.insertImage = insertImage
