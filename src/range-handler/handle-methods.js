@@ -171,16 +171,26 @@ const m = {
 
   /*
    * find an ancestor element through selector
-   * @param {node} target node
+   * @param {node} start at node
    * @param {str} ancestor element's selector
-   * @return ancestor element
+   * @param {boolean} either return first eligible element or last eligible element
+   *  default: true
+   * @param {node} searching stop at the border element
+   *  default: editor's content zone
+   * @return target ancestor element
    **/
-  findSpecialAncestor (node, selector) {
+  findSpecialAncestor (node, selector, firstOne = true, border) {
     let result
-    while (node && !result && (!node.dataset || (node.dataset.editor !== 'content'))) {
-      let ancestor = node.parentNode.querySelector(selector)
-      if (ancestor) {
-        result = ancestor
+    let contentZone = document.querySelector('[data-editor="content"]')
+    border = border || contentZone
+    while (node && (firstOne ? !result : true) && (node !== border)) {
+      if (!border || !border.contains(node)) return
+      let ancestors = Array.from(node.parentNode.querySelectorAll(selector))
+      if (ancestors.length) {
+        if (ancestors.includes(node)) {
+          result = node
+        }
+        node = node.parentNode
       } else {
         node = node.parentNode
       }
@@ -244,6 +254,22 @@ const m = {
       }
     }
     return textNodes
+  },
+  /*
+   * get the row which contains target element
+   * @param {node} target element
+   * @return {node} row
+   **/
+  getRow (node) {
+    console.log('get')
+    let rows = Array.from(document.querySelector('[data-editor="content"]').querySelectorAll('p'))
+    let result
+    rows.forEach(row => {
+      if (row.contains(node)) {
+        result = row
+      }
+    })
+    return result
   }
 }
 

@@ -9,7 +9,7 @@ const methods = {
    * @return  {node}
    **/
   newRow (data = {}) {
-    const row = document.createElement(data.tag || 'div')
+    const row = document.createElement(data.tag || 'p')
     if (data.id) {
       row.dataset.editorRow = methods.createRandomId('row')
     }

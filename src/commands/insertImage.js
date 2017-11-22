@@ -64,7 +64,8 @@ const insertImage = function (rh, arg) {
       status: 'everything fine',
       statusCode: 2,
       base64,
-      replaceSrcAfterUploadFinish: replaceImg(id)
+      replaceSrcAfterUploadFinish: replaceImg(id),
+      deleteImgWhenUploadFail: deleteImg(id)
     }))
   }
 
@@ -75,6 +76,17 @@ const insertImage = function (rh, arg) {
       if (target) {
         target.setAttribute('src', src)
         target.removeAttribute('data-editor-img')
+        editor.$emit('change', editor.$refs.content.innerHTML)
+      }
+    }
+  }
+
+  // delete image after upload fail
+  function deleteImg (id) {
+    return function () {
+      let target = document.querySelector(`img[data-editor-img='${id}']`)
+      if (target) {
+        target.parentNode.removeChild(target)
         editor.$emit('change', editor.$refs.content.innerHTML)
       }
     }

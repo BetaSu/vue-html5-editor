@@ -59,11 +59,7 @@ class Editor {
         Object.assign(moduleConfig, curConfig)
         config[module.name] = moduleConfig
       }
-
-      if (module.dashboard) {
-        module.dashboard.module = module
-        components[`dashboard-${module.name}`] = module.dashboard
-      }
+      
       module.styleInspectResult = null
       module.forbidden = null
       if (module.tab) {
@@ -77,11 +73,9 @@ class Editor {
       if (module.config && module.config.handler) {
         module.handler = module.handler || module.config.handler
       }
-
-      module.hasDashboard = !!module.dashboard
       module.hasTab = !!module.tab
+      
       // prevent vue sync
-      delete module.dashboard
       delete module.tab
     })
 
@@ -110,10 +104,13 @@ class Editor {
 
     // commands
     const commands = options.commands
-
+    
+    // spellcheck
+    const spellcheck = options.spellcheck || false
+    
     const compo = mixin(editor, {
       data () {
-        return {modules, locale, shortcut, commands, config, placeholder}
+        return {modules, locale, shortcut, commands, config, placeholder, spellcheck}
       },
       components
     })

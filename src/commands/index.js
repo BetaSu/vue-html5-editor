@@ -146,6 +146,7 @@ const commands = {
   },
   'insertHTML' (rh, arg) {
     if (document.execCommand('insertHTML', false, arg)) {
+      console.log('insert html!')
       return
     }
     // hack
@@ -246,18 +247,28 @@ const commands = {
   },
   // only set contenteditable:false in parent node can child node trigger keydown listener
   'quote' (rh, isInQuote) {
-    // console.log('quote!')
+    console.log('quote!')
     if (isInQuote) {
       let node = rh.range.commonAncestorContainer
       node = node.nodeType === Node.TEXT_NODE ? node.parentNode : node
       let quote = rh.findSpecialAncestor(node, '[data-editor-quote]')
       if (quote) {
         let texts = rh.getDescendantTextNodes(quote)
-        let newContainer = document.createElement('div')
+        let newContainer = rh.newRow()
+        let quoteRows = []
         texts.forEach(text => {
-          let row = rh.newRow()
-          row.appendChild(text)
-          newContainer.appendChild(row)
+          // find p in current quote row
+          let row = rh.findSpecialAncestor(text, 'p', false, quote)
+          // maybe have bug
+          if (!row) {
+            row = rh.findSpecialAncestor(text, 'div', false, quote)
+          }
+          if (!quoteRows.includes(row)) {
+            quoteRows.push(row)
+          }
+        })
+        quoteRows.forEach(qr => {
+          newContainer.appendChild(qr)
         })
         quote.parentNode.replaceChild(newContainer, quote)
       }
@@ -267,67 +278,86 @@ const commands = {
     if (!texts.length) {
       texts.push(document.createTextNode(''))
     }
-    let container = document.createElement('div')
+
+    let container = rh.newRow()
     let br = document.createElement('br')
     let quoteBlock = document.createElement('section')
+    let quoteBlockDiv = rh.newRow({tag: 'div'})
+    quoteBlock.appendChild(quoteBlockDiv)
     let id = rh.createRandomId('quote')
     quoteBlock.setAttribute('data-editor-quote', id)
     quoteBlock.setAttribute('contenteditable', 'false')
+    let quoteRows = []
     texts.forEach((text, index) => {
-      const row = rh.newRow()
-      row.appendChild(text)
-      quoteBlock.appendChild(row)
+      if (!text.parentNode) {
+        quoteRows.push(rh.newRow({br: true}))
+        return
+      }
+      let curRow = rh.getRow(text)
+      if (!quoteRows.includes(curRow)) {
+        quoteRows.push(curRow)
+      }
+    })
+    quoteRows.forEach(qr => {
+      const quoteRowContainer = rh.newRow({
+        tag: 'div'
+      })
+      quoteRowContainer.appendChild(qr)
+      quoteBlockDiv.appendChild(quoteRowContainer)
     })
     container.appendChild(quoteBlock)
     container.appendChild(br)
+    let aNode = rh.range.commonAncestorContainer
+    // if range is not at edit zone, insertHTML would run fail
+    if (!aNode.dataset || aNode.dataset.editor !== 'content') {
+      aNode.parentNode.removeChild(aNode)
+    }
     commands['insertHTML'](rh, container.innerHTML)
     const quote = document.querySelector(`[data-editor-quote='${id}']`)
+    if (!quote.lastElementChild) return
     rh.getSelection().collapse(quote.lastElementChild, quote.lastElementChild.innerText ? 1 : 0)
   },
   'initQuote' (rh, arg) {
     document.addEventListener('keydown', e => {
-      if (e.target.dataset.editorQuote || e.target.parentNode.dataset.editorQuote) {
+      let quote = rh.findSpecialAncestor(e.target, '[data-editor-quote]')
+      if (quote) {
+        let s = rh.getSelection()
+        let node = s.anchorNode
+        let ctn = node.innerText || node.nodeValue
         if (e.keyCode === 13) {
-          e.preventDefault()
-          if (e.target.innerText.replace('\n', '') === '') {
-            let parent = e.target.parentNode
-            let sibling = parent.nextSibling
+          if (ctn.replace('\n', '') === '') {
+            e.preventDefault()
+            let sibling = quote.nextSibling
             if (!sibling || sibling.innerHTML === '') {
               sibling = rh.newRow({
                 br: true
               })
-              rh.insertAfter(sibling, parent)
+              rh.insertAfter(sibling, quote)
             }
-            parent.removeChild(e.target)
-            rh.getSelection().collapse(sibling, 0)
-          } else {
-            const row = rh.newRow()
-            rh.insertAfter(row, e.target)
-            const sibling = e.target.nextSibling
+            node.parentNode.removeChild(node)
             rh.getSelection().collapse(sibling, 0)
           }
         }
         if (e.keyCode === 8) {
-          if (e.target.innerText.replace('\n', '') === '') {
-            e.preventDefault()
-            let quote = e.target.parentNode
-            let sibling = e.target.previousSibling
-            quote.removeChild(e.target)
-            let num = quote.querySelectorAll('div')
-            if (!num.length || (num.length === 1 && num[0].innerText === '')) {
-              const row = rh.newRow()
-              quote.parentNode.replaceChild(row, quote)
-              rh.getSelection().collapse(row, 0)
-            } else {
-              rh.getSelection().collapse(sibling, 1)
-            }
-          } else {
-            if (rh.range.collapsed) {
-              let s = rh.getSelection()
-              if (s.anchorOffset === 0) {
+          if (ctn.replace('\n', '') === '' &&
+            (node.parentNode === quote || (node.parentNode.nodeName === 'DIV' && node === node.parentNode.firstElementChild))) {
+            let newRow = rh.newRow({br: true})
+            quote.parentNode.replaceChild(newRow, quote)
+            rh.getSelection().collapse(newRow, 1)
+            return
+          }
+          if (s.isCollapsed && s.focusOffset === 0) {
+            let quoteRow = rh.findSpecialAncestor(node, 'div')
+            let rows = Array.from(quoteRow.parentNode.querySelectorAll('div'))
+            rows.forEach((row, index) => {
+              if (row === quoteRow && index === 0) {
                 e.preventDefault()
+                let preRow = rh.getRow(quote.previousElementSibling)
+                if (preRow) {
+                  rh.getSelection().collapse(preRow, 0)
+                }
               }
-            }
+            })
           }
         }
       }
@@ -405,32 +435,37 @@ const commands = {
       ctn.onkeydown = ctn.onkeydown || (e => {
           if (![13, 8].includes(e.keyCode)) return
           let row = c.nextSibling
-          if (!row || !row.getAttribute('[data-editor-row]')) {
-            row = rh.newRow({
-              id: true
-            })
-            rh.insertAfter(row, c)
-          }
+          // if (!row || !row.getAttribute('[data-editor-row]')) {
+          //   row = rh.newRow({
+          //     id: true
+          //   })
+          //   rh.insertAfter(row, c)
+          // }
           if (e.keyCode === 13) {
             if (ctn.value === '') {
               e.preventDefault()
               return deleteTodo()
             }
             commands['todo'](rh, c)
-            row.removeAttribute('data-editor-row')
-          } else if (e.keyCode === 8 && ctn.value === '') {
-            e.preventDefault()
-            deleteTodo()
+            // row.removeAttribute('data-editor-row')
+          } else if (e.keyCode === 8) {
+            if (ctn.value === '') {
+              e.preventDefault()
+              deleteTodo()
+            }
           }
 
           function deleteTodo() {
-            let row = c.parentNode.querySelector('[data-editor-row]')
-            let br = document.createElement('br')
-            row.appendChild(br)
-            const sibling = c.previousSibling ? c.previousSibling : c.parentNode
-            c.parentNode.removeChild(c)
-            rh.getSelection().collapse(row, 0)
-            row.removeAttribute('data-editor-row')
+            // let row = c.parentNode.querySelector('[data-editor-row]')
+            // let br = document.createElement('br')
+            // row.appendChild(br)
+            // const sibling = c.previousSibling ? c.previousSibling : c.parentNode
+            // c.parentNode.removeChild(c)
+            // rh.getSelection().collapse(row, 0)
+            // row.removeAttribute('data-editor-row')
+            let newRow = rh.newRow({br: true})
+            c.parentNode.replaceChild(newRow, c)
+            rh.getSelection().collapse(newRow, 1)
           }
         })
       c.init = true
@@ -492,6 +527,50 @@ const commands = {
     //     rh.getSelection().collapse(newUnderline, 1)
     //   }
     // }
+  },
+  'delete' (rh, e) {
+    // restore first row
+    let node = rh.range.commonAncestorContainer
+    node = rh.findSpecialAncestor(node, 'p')
+    if (!node) return
+    if (rh.range.collapsed && (rh.range.startOffset === 0 || (node.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
+      if (node) {
+        let firstRow = document.querySelector('[data-editor="content"]').firstElementChild
+        if (firstRow === node) {
+          e.preventDefault()
+        } else if (firstRow.contains(node)) {
+          e.preventDefault()
+          let newRow = rh.newRow({br: true, tag: 'p'})
+          firstRow.parentNode.replaceChild(newRow, firstRow)
+          rh.getSelection().collapse(newRow, 1)
+        }
+      }
+    }
+
+    if (node.innerHTML.replace(/<br>/g, '') === '') {
+      // get previous row with content
+      let preRow
+      let rows = Array.from(node.parentNode.querySelectorAll('p'))
+      let rowIndex = null
+      rows.forEach((row, index) => {
+        if (row === node) {
+          rowIndex = index
+        }
+        if (rowIndex === null) {
+          if (row.innerHTML.replace(/<br>/g, '') !== '') {
+            preRow = row
+          }
+        }
+      })
+      // cursor focus on previous row's input when previous row is todo
+      if (preRow && preRow.dataset && preRow.dataset.editorTodo) {
+        e.preventDefault()
+        let input = preRow.querySelector('input[type="text"]')
+        if (input) {
+          input.focus()
+        }
+      }
+    }
   }
 }
 commands.insertImage = insertImage

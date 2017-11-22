@@ -14,13 +14,9 @@
               </template>
             </template>
         </ul>
-        <div class="dashboard" v-show="dashboard" ref="dashboard" data-editor="dashboard">
-            <keep-alive>
-                <div v-show="dashboard" :is="dashboard"></div>
-            </keep-alive>
-        </div>
     </div>
-    <div class="content" ref="content" id="editor-content" :style="contentStyle" data-editor="content"
+  <!--do not change content zone 's tag name cause row's inspect mechanism base on p-->
+    <p class="content" :spellcheck="spellcheck" ref="content" id="editor-content" :style="contentStyle" data-editor="content"
          contenteditable :data-editor-placeholder="placeholder" @click="toggleDashboard(dashboard)" v-drag-pic="handleDragPic">
-    </div>
+    </p>
 </div>

@@ -103,12 +103,13 @@ export default {
     toggleDashboard(dashboard){
       this.dashboard = this.dashboard === dashboard ? null : dashboard
     },
-    execCommand(command, arg){
-      this.restoreSelection()
+    execCommand(command, arg, execOnly){
+      if (!execOnly) {
+        this.restoreSelection()
+      }
       if (this.range) {
         new RangeHandler(this.range, this).execCommand(command, arg)
       }
-      this.toggleDashboard()
       this.$emit('change', this.$refs.content.innerHTML)
     },
     getCurrentRange(){
@@ -129,7 +130,6 @@ export default {
         end = end.nodeType === Node.TEXT_NODE ? end.parentNode : end
         if (content.contains(start) && content.contains(end)) {
           this.range = range
-          // console.log('range is:', range)
           break
         }
       }
@@ -141,11 +141,12 @@ export default {
         selection.addRange(this.range)
       } else {
         const content = this.$refs.content
-        const div = document.createElement('div')
+        const row = document.createElement('p')
+        row.appendChild(document.createElement('br'))
         const range = document.createRange()
-        content.appendChild(div)
-        range.setStart(div, 0)
-        range.setEnd(div, 0)
+        content.appendChild(row)
+        range.setStart(row, 0)
+        range.setEnd(row, 0)
         selection.addRange(range)
         this.range = range
       }
@@ -162,9 +163,6 @@ export default {
           // }
         })
         return
-      }
-      if (module.hasDashboard) {
-        this.toggleDashboard(`dashboard-${module.name}`)
       }
     },
     styleInspect () {
@@ -241,27 +239,24 @@ export default {
 
         // handle style inspect logic
         if (this.activeModules.length) {
-          let firstOne = this.activeModules[0]
-          // is block type module
-          let activeModuleIsBlockModule = inspectForBlock[firstOne]
           this.modules.forEach(module => {
-            // can not use a block module inside another block module
-            if (activeModuleIsBlockModule) {
-              if (module.type !== 'fn' && !this.activeModules.includes(module.name)) {
-                module.forbidden = true
-              }
-            } else {
-              module.forbidden = false
-            }
             module.styleInspectResult = false
             if (this.activeModules.includes(module.name)) {
               module.styleInspectResult = true
               if (module.exclude) {
                 this.modules.forEach(m => {
-                  if (module.exclude.includes(m.name)) {
+                  if (module.exclude.includes('ALL')) {
+                    m.forbidden = true
+                  } else if (module.exclude.includes('ALL_BUT_MYSELF')) {
+                    m.forbidden = true
                     this.$nextTick(() => {
-                      m.forbidden = true
+                      module.forbidden = false
                     })
+                  } else {
+                    m.forbidden = false
+                    if (module.exclude.includes(m.name)) {
+                      m.forbidden = true
+                    }
                   }
                 })
               }
@@ -329,9 +324,8 @@ export default {
         item.forEach(s => {
           if (e.keyCode === s.keyCode && e.altKey === !!s.altKey && e.ctrlKey === !!s.ctrlKey && e.metaKey === !!s.metaKey && e.shiftKey === !!s.shiftKey) {
             if (typeof s.handler === 'function') {
-              e.preventDefault()
               this.saveCurrentRange()
-              s.handler(this)
+              s.handler(this, e)
             }
           }
         })
@@ -347,10 +341,11 @@ export default {
     })
   },
   updated(){
-    // update dashboard style
-    if (this.$refs.dashboard) {
-      this.$refs.dashboard.style.maxHeight = `${this.$refs.content.clientHeight}px`
-    }
+    this.modules.forEach((module) => {
+      if (typeof module.updated === 'function') {
+        module.updated(this)
+      }
+    })
   },
   beforeDestroy(){
     window.removeEventListener('touchend', this.touchHandler)
