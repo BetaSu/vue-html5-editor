@@ -251,6 +251,10 @@ export default {
                       m.forbidden = true
                     }
                   }
+
+                  if (m.type === 'fn') {
+                    m.forbidden = false
+                  }
                 })
               }
             }

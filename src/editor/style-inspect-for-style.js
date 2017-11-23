@@ -5,26 +5,22 @@
 // todo 待定的修改
 let config = {
   'HEADING': {
-    tag: 'p',
-    fontSize: '30px',
+    fontSize: 'xx-large',
     lineHeight: '1.4',
     name: '大标题'
   },
   'SUB_HEADING': {
-    tag: 'p',
-    fontSize: '24px',
+    fontSize: 'x-large',
     lineHeight: '1.4',
     name: '副标题'
   },
   'SMALL_HEADING': {
-    tag: 'p',
-    fontSize: '20px',
+    fontSize: 'large',
     lineHeight: '1.5',
     name: '小标题'
   },
   'MAIN': {
-    tag: 'p',
-    fontSize: '14px',
+    fontSize: 'medium',
     lineHeight: '1.5',
     name: '正文'
   }
