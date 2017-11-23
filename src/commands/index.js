@@ -559,6 +559,7 @@ const commands = {
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (node.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
       if (node) {
         let firstRow = rh.editZone().firstElementChild
+        if (firstRow.nodeName !== 'P') return
         if (firstRow === node) {
           e.preventDefault()
         } else if (firstRow.contains(node)) {
