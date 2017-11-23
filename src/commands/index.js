@@ -1,5 +1,6 @@
 import insertImage from './insertImage'
 import { isObj } from '../util'
+import constant from '../constant-config'
 
 const fontSizeMap = {
   3: 'medium',
@@ -185,88 +186,89 @@ const commands = {
     rh.range.insertNode(fragment)
     return
   },
-  // unorderedList's insert and indent logic
-  'listIndent' (rh, arg) {
-    const range = rh.range
-    const startContainer = range.startContainer
-    const parent = rh.getParentBlockNode(startContainer)
-    let curLevel = rh.howManyNestAncestorSameTag(rh.range.commonAncestorContainer, 'UL')
-    if (parent === rh.editZone()) {
-      return document.execCommand('insertUnorderedList', false, arg)
-    } else {
-      if (parent.nodeName === 'LI') {
-        const pre = parent.previousSibling
-        if (pre && pre.nodeName === 'LI') {
-          // 0代表已取消缩进，下一次操作变为1级缩进
-          // 12代表1级缩进，下一次操作变为2级缩进
-          // 2代表2级缩进，下一次操作变为1级缩进
-          // 10代表1级缩进，下一次操作取消缩进
-          let curIndent = pre.getAttribute('data-editor-siblingindentlevel')
-          switch (curIndent) {
-            case null:
-              if (curLevel >= 10) return
-              pre.setAttribute('data-editor-siblingindentlevel', '10')
-              document.execCommand('indent', false)
-              break
-            case '10':
-              pre.setAttribute('data-editor-siblingindentlevel', '12')
-              document.execCommand('insertUnorderedList', false, arg)
-              break
-            case '12':
-              if (curLevel >= 10) return
-              pre.setAttribute('data-editor-siblingindentlevel', '10')
-              document.execCommand('indent', false)
-              break
-          }
-          return
-        }
-        if (pre && pre.nodeName === 'UL') {
-          if (curLevel >= 10) return
-          return document.execCommand('indent', false)
-        }
-        return document.execCommand('insertUnorderedList', false, arg)
-      }
-      if (parent.nodeName === 'UL') {
-
-      }
-    }
-    if (curLevel >= 10) return
-    document.execCommand('indent', false)
-  },
   'indent' (rh, arg) {
-    let node = rh.range.commonAncestorContainer
-    if (node.nodeType === Node.TEXT_NODE) {
-      node = node.parentNode
+    let nodeList = []
+    if (rh.range.collapsed) {
+      weighting(rh.range.commonAncestorContainer)
+    } else {
+      let texts = rh.getAllTextNodesInRange()
+      texts.forEach(text => {
+        weighting(text)
+      })
     }
-    let nestNode = 'BLOCKQUOTE'
-    if (node.nodeName === 'LI' || node.nodeName === 'UL') {
-      nestNode = 'UL'
+
+    nodeList.forEach(node => {
+      doIndent(node.nodeName, node)
+    })
+
+    function weighting(text) {
+      let node = rh.findSpecialAncestor(text, 'li') || rh.findSpecialAncestor(text, constant.ROW_TAG)
+      if (node && !nodeList.includes(node)) {
+        nodeList.push(node)
+      }
     }
-    let curLevel = rh.howManyNestAncestorSameTag(node, nestNode)
-    // max level == 10
-    if (curLevel >= 10) return
-    document.execCommand('indent', false, arg)
+
+    function doIndent(type, node) {
+      switch (type) {
+        case 'LI':
+          let curLevel = rh.howManyNestAncestorSameTag(node, 'UL')
+          if (curLevel >= constant.MAX_INDENT_LEVEL) break
+          document.execCommand('indent', false, arg)
+          break
+        case constant.ROW_TAG_UPPERCASE:
+          let curPercent = node.style[constant.INDENT_STYLE_NAME] || '0'
+          curPercent = Number(curPercent.replace('%', ''))
+          node.style[constant.INDENT_STYLE_NAME] = ''
+          node.style[constant.OUTDENT_STYLE_NAME] = ''
+          if (curPercent / constant.INDENT_WIDTH_PERCENT >= constant.MAX_INDENT_LEVEL) {
+            node.style[constant.INDENT_STYLE_NAME] = curPercent + '%'
+            return
+          }
+          node.style[constant.INDENT_STYLE_NAME] = curPercent + constant.INDENT_WIDTH_PERCENT + '%'
+      }
+    }
   },
-  // treat normal indent and list indent differently
-  'smartIndent' (rh, arg) {
-    // let startContainer = rh.range.startContainer
-    // const parent = rh.getParentBlockNode(startContainer)
-    // if (parent.nodeName === 'UL' || parent.nodeName === 'LI') {
-    //   commands['listIndent'](rh, arg)
-    // } else {
-    //   if (startContainer.nodeType === 3) {
-    //     startContainer = parent
-    //   }
-    //   const ulNum = rh.getNodeNum(startContainer, 'ul')
-    //   let pre_listNum = startContainer.getAttribute('data-editor-ulNum')
-    //   if (pre_listNum && Number(pre_listNum) < ulNum) {
-    //     return commands['listIndent'](rh, arg)
-    //   }
-    //   startContainer.setAttribute('data-editor-ulNum', ulNum)
-    //   commands['indent'](rh, arg)
-    // }
-    let startContainer = rh.range.startContainer
-    commands['indent'](rh, arg)
+  'outdent' (rh, arg) {
+    let nodeList = []
+    if (rh.range.collapsed) {
+      weighting(rh.range.commonAncestorContainer)
+    } else {
+      let texts = rh.getAllTextNodesInRange()
+      texts.forEach(text => {
+        weighting(text)
+      })
+    }
+
+    nodeList.forEach(node => {
+      doOutdent(node.nodeName, node)
+    })
+
+    function weighting(text) {
+      let node = rh.findSpecialAncestor(text, 'li') || rh.findSpecialAncestor(text, constant.ROW_TAG)
+      if (node && !nodeList.includes(node)) {
+        nodeList.push(node)
+      }
+    }
+
+    function doOutdent(type, node) {
+      switch (type) {
+        case 'LI':
+          document.execCommand('outdent', false, arg)
+          break
+        case constant.ROW_TAG_UPPERCASE:
+          let curPercent = node.style[constant.INDENT_STYLE_NAME] || '0'
+          curPercent = Number(curPercent.replace('%', ''))
+          if (curPercent === 0) return
+          node.style[constant.INDENT_STYLE_NAME] = ''
+          node.style[constant.OUTDENT_STYLE_NAME] = ''
+          let targetIndent = curPercent - constant.INDENT_WIDTH_PERCENT
+          if (targetIndent < 0) {
+            node.style[constant.INDENT_STYLE_NAME] = ''
+          } else {
+            node.style[constant.INDENT_STYLE_NAME] = targetIndent + '%'
+          }
+      }
+    }
   },
   // only set contenteditable:false in parent node can child node trigger keydown listener
   'quote' (rh, isInQuote) {
@@ -279,8 +281,8 @@ const commands = {
         let texts = rh.getDescendantTextNodes(quote)
         let quoteRows = []
         texts.forEach(text => {
-          // find p in current quote row
-          let row = rh.findSpecialAncestor(text, 'p', false, quote)
+          // find row in current quote row
+          let row = rh.findSpecialAncestor(text, constant.ROW_TAG, false, quote)
           // maybe have bug
           // if (!row) {
           //   row = rh.findSpecialAncestor(text, 'div', false, quote)
@@ -369,7 +371,7 @@ const commands = {
             return
           }
           if (s.isCollapsed && s.focusOffset === 0) {
-            let quoteRow = rh.findSpecialAncestor(node, 'p', false, quote)
+            let quoteRow = rh.findSpecialAncestor(node, constant.ROW_TAG, false, quote)
             let rows = Array.from(quoteRow.parentNode.children)
             rows.forEach((row, index) => {
               if (row === quoteRow && index === 0) {
@@ -416,7 +418,7 @@ const commands = {
       rh.getSelection().collapse(row, 0)
     }
     let todoId = rh.createRandomId('todo')
-    commands['insertHTML'](rh, `<p data-editor-todo=${todoId} contenteditable="false"><input type="checkbox"/><input type="text" placeholder="待办事项"></p><br>`)
+    commands['insertHTML'](rh, `<${constant.ROW_TAG} data-editor-todo=${todoId} contenteditable="false"><input type="checkbox"/><input type="text" placeholder="待办事项"></${constant.ROW_TAG}><br>`)
     document.querySelector(`[data-editor-todo='${todoId}'] input[type=text]`).focus()
     if (row) {
       let br = row.querySelector('br')
@@ -457,34 +459,21 @@ const commands = {
       ctn.onkeydown = ctn.onkeydown || (e => {
           if (![13, 8].includes(e.keyCode)) return
           let row = c.nextSibling
-          // if (!row || !row.getAttribute('[data-editor-row]')) {
-          //   row = rh.newRow({
-          //     id: true
-          //   })
-          //   rh.insertAfter(row, c)
-          // }
           if (e.keyCode === 13) {
             if (ctn.value === '') {
               e.preventDefault()
               return deleteTodo()
             }
             commands['todo'](rh, c)
-            // row.removeAttribute('data-editor-row')
           } else if (e.keyCode === 8) {
             if (ctn.value === '') {
               e.preventDefault()
+              e.stopPropagation()
               deleteTodo()
             }
           }
 
           function deleteTodo() {
-            // let row = c.parentNode.querySelector('[data-editor-row]')
-            // let br = document.createElement('br')
-            // row.appendChild(br)
-            // const sibling = c.previousSibling ? c.previousSibling : c.parentNode
-            // c.parentNode.removeChild(c)
-            // rh.getSelection().collapse(row, 0)
-            // row.removeAttribute('data-editor-row')
             let newRow = rh.newRow({br: true})
             c.parentNode.replaceChild(newRow, c)
             rh.getSelection().collapse(newRow, 1)
@@ -492,23 +481,6 @@ const commands = {
         })
       c.init = true
     })
-  },
-  'fontStyle' (rh, arg) {
-    commands['formatBlock'](rh, arg)
-    // if (rh.range.collapsed) {
-    //   commands['formatBlock'](rh, arg)
-    // } else {
-    //   console.log('else')
-    //   let texts = rh.getAllTextNodesInRange()
-    //   texts.forEach(text => {
-    //     let node = text.parentNode
-    //     let newTag = document.createElement(arg)
-    //     newTag.appendChild(text)
-    //     if (node.parentNode) {
-    //       node.parentNode.replaceChild(newTag, node)
-    //     }
-    //   })
-    // }
   },
   'underline' (rh, arg) {
     document.execCommand('underline', false, arg)
@@ -554,17 +526,18 @@ const commands = {
     console.log('delete')
     // restore first row
     let node = rh.range.commonAncestorContainer
-    node = rh.findSpecialAncestor(node, 'p')
+    node = rh.findSpecialAncestor(node, constant.ROW_TAG)
     if (!node) return
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (node.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
       if (node) {
         let firstRow = rh.editZone().firstElementChild
-        if (firstRow.nodeName !== 'P') return
+        if (firstRow.nodeName !== constant.ROW_TAG_UPPERCASE) return
         if (firstRow === node) {
+          firstRow.style[constant.INDENT_STYLE_NAME] = ''
           e.preventDefault()
         } else if (firstRow.contains(node)) {
           e.preventDefault()
-          let newRow = rh.newRow({br: true, tag: 'p'})
+          let newRow = rh.newRow({br: true, tag: constant.ROW_TAG})
           firstRow.parentNode.replaceChild(newRow, firstRow)
           rh.getSelection().collapse(newRow, 1)
         }
@@ -574,7 +547,7 @@ const commands = {
     if (node.innerHTML.replace(/<br>/g, '') === '') {
       // get previous row with content
       let preRow
-      let rows = Array.from(node.parentNode.querySelectorAll('p'))
+      let rows = Array.from(node.parentNode.querySelectorAll(constant.ROW_TAG))
       let rowIndex = null
       rows.forEach((row, index) => {
         if (row === node) {

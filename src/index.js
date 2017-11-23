@@ -1,6 +1,7 @@
 import polyfill from './util/polyfill-ie'
 import buildInModules from './modules/index'
 import buildInShortcut from './shortcut'
+import constantConfig from './constant-config'
 import editor from './editor/editor'
 import i18nZhCn from './i18n/zh-cn'
 import i18nEnUs from './i18n/en-us'
@@ -110,7 +111,7 @@ class Editor {
     
     const compo = mixin(editor, {
       data () {
-        return {modules, locale, shortcut, commands, config, placeholder, spellcheck}
+        return {modules, locale, shortcut, commands, config, placeholder, spellcheck, constantConfig}
       },
       components
     })

@@ -1,3 +1,4 @@
+import constant from '../constant-config'
 const methods = {
   /*
    * func create a new row element
@@ -9,7 +10,7 @@ const methods = {
    * @return  {node}
    **/
   newRow (data = {}) {
-    const row = document.createElement(data.tag || 'p')
+    const row = document.createElement(data.tag || constant.ROW_TAG)
     if (data.id) {
       row.dataset.editorRow = methods.createRandomId('row')
     }

@@ -11,7 +11,7 @@ export default {
     keyCode: 9,
     handler (editor, e) {
       e.preventDefault()
-      editor.execCommand('smartIndent')
+      editor.execCommand('indent')
     }
   },
   delete: {
