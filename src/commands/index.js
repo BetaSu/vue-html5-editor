@@ -277,23 +277,25 @@ const commands = {
       let quote = rh.findSpecialAncestor(node, '[data-editor-quote]')
       if (quote) {
         let texts = rh.getDescendantTextNodes(quote)
-        let newContainer = rh.newRow()
         let quoteRows = []
         texts.forEach(text => {
           // find p in current quote row
           let row = rh.findSpecialAncestor(text, 'p', false, quote)
           // maybe have bug
-          if (!row) {
-            row = rh.findSpecialAncestor(text, 'div', false, quote)
-          }
+          // if (!row) {
+          //   row = rh.findSpecialAncestor(text, 'div', false, quote)
+          // }
           if (!quoteRows.includes(row)) {
             quoteRows.push(row)
           }
         })
-        quoteRows.forEach(qr => {
-          newContainer.appendChild(qr)
+        quoteRows.forEach((qr, index) => {
+          if (index === 0) {
+            quote.parentNode.replaceChild(qr, quote)
+          } else {
+            rh.insertAfter(qr, quoteRows[index - 1])
+          }
         })
-        quote.parentNode.replaceChild(newContainer, quote)
       }
       return
     }
@@ -322,11 +324,7 @@ const commands = {
       }
     })
     quoteRows.forEach(qr => {
-      const quoteRowContainer = rh.newRow({
-        tag: 'div'
-      })
-      quoteRowContainer.appendChild(qr)
-      quoteBlockDiv.appendChild(quoteRowContainer)
+      quoteBlockDiv.appendChild(qr)
     })
     container.appendChild(quoteBlock)
     container.appendChild(br)
@@ -344,6 +342,7 @@ const commands = {
     document.addEventListener('keydown', e => {
       let quote = rh.findSpecialAncestor(e.target, '[data-editor-quote]')
       if (quote) {
+        console.log('init quote')
         let s = rh.getSelection()
         let node = s.anchorNode
         let ctn = node.innerText || node.nodeValue
@@ -370,8 +369,8 @@ const commands = {
             return
           }
           if (s.isCollapsed && s.focusOffset === 0) {
-            let quoteRow = rh.findSpecialAncestor(node, 'div')
-            let rows = Array.from(quoteRow.parentNode.querySelectorAll('div'))
+            let quoteRow = rh.findSpecialAncestor(node, 'p', false, quote)
+            let rows = Array.from(quoteRow.parentNode.children)
             rows.forEach((row, index) => {
               if (row === quoteRow && index === 0) {
                 e.preventDefault()
