@@ -1,13 +1,7 @@
-/**
- * text align
- * Created by peak on 16/8/18.
- */
-import dashboard from './dashboard'
+import tab from './tab'
 
 export default {
-    name: 'align',
-    icon: 'fa fa-align-center',
-    i18n: 'align',
-    dashboard
+  name: 'align',
+  icon: 'iui-icon iui-icon-align',
+  tab
 }
-

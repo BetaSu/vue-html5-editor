@@ -7,29 +7,43 @@ import hr from './hr/index'
 import image from './image/index'
 import info from './info/index'
 import link from './link/index'
-import list from './list/index'
 import table from './table/index'
 import text from './text/index'
 import undo from './undo/index'
 import unlink from './unlink/index'
+import bold from './bold'
+import italic from './italic'
+import underline from './underline'
+import todo from './todo'
+import quote from './quote'
+import indent from './indent'
+import ul from './ul'
+import linethrough from './linethrough'
+
 
 /**
  * build-in moduls
- * Created by peak on 2016/11/1.
  */
 export default [
-    text,
-    color,
-    font,
-    align,
-    list,
-    link,
-    unlink,
-    table,
-    image,
-    hr,
-    eraser,
-    undo,
-    fullScreen,
-    info
+  text,
+  color,
+  font,
+  align,
+  link,
+  unlink,
+  table,
+  image,
+  hr,
+  eraser,
+  undo,
+  fullScreen,
+  info,
+  bold,
+  italic,
+  underline,
+  todo,
+  quote,
+  indent,
+  ul,
+  linethrough
 ]

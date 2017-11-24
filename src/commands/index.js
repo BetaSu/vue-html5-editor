@@ -526,6 +526,14 @@ const commands = {
     console.log('delete')
     // restore first row
     let node = rh.range.commonAncestorContainer
+
+    // cancel list when li is empty
+    if (node.nodeName === 'LI' && rh.range.collapsed && rh.range.startOffset === 0) {
+      document.execCommand('insertUnorderedList', false, null)
+      e.stopPropagation()
+      e.preventDefault()
+      return
+    }
     node = rh.findSpecialAncestor(node, constant.ROW_TAG)
     if (!node) return
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (node.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {

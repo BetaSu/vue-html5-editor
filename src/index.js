@@ -3,6 +3,7 @@ import buildInModules from './modules/index'
 import buildInShortcut from './shortcut'
 import constantConfig from './constant-config'
 import editor from './editor/editor'
+import initStyleInspect from './editor/load-style-inspect-rules'
 import i18nZhCn from './i18n/zh-cn'
 import i18nEnUs from './i18n/en-us'
 import {
@@ -23,7 +24,7 @@ class Editor {
       }
     })
     const components = {}
-    const config = {}
+    const modulesMap = {}
 
     // extended modules
     if (Array.isArray(options.extendModules)) {
@@ -55,14 +56,16 @@ class Editor {
     modules.forEach(module => {
       // config
       let curConfig = options[module.name]
-      let moduleConfig = module.config
-      if (isObj(curConfig) || isObj(moduleConfig)) {
+      let moduleConfig = module
+      if (isObj(curConfig) && isObj(moduleConfig)) {
         Object.assign(moduleConfig, curConfig)
-        config[module.name] = moduleConfig
       }
       
       module.styleInspectResult = null
       module.forbidden = null
+      module.type = module.type || 'wrapper'
+      module.exclude = initStyleInspect(module, modules)
+      
       if (module.tab) {
         module.tab.module = module
         module.tabName = `tab-${module.name}`
@@ -71,13 +74,12 @@ class Editor {
       if (options.icons && options.icons[module.name]) {
         module.icon = options.icons[module.name]
       }
-      if (module.config && module.config.handler) {
-        module.handler = module.handler || module.config.handler
-      }
       module.hasTab = !!module.tab
       
       // prevent vue sync
       delete module.tab
+
+      modulesMap[module.name] = module
     })
 
     // i18n
@@ -111,7 +113,7 @@ class Editor {
     
     const compo = mixin(editor, {
       data () {
-        return {modules, locale, shortcut, commands, config, placeholder, spellcheck, constantConfig}
+        return {modules, locale, shortcut, modulesMap, commands, placeholder, spellcheck, constantConfig}
       },
       components
     })

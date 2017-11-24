@@ -1,11 +1,8 @@
-import dashboard from './dashboard'
-/**
- * font name and font size
- * Created by peak on 16/8/18.
- */
+import tab from './tab'
+
 export default {
-    name: 'font',
-    icon: 'fa fa-font',
-    i18n: 'font',
-    dashboard
+  name: 'font',
+  icon: 'iui-icon iui-icon-spanner',
+  tab,
+  contains: ['HEADING', 'SUB_HEADING', 'SMALL_HEADING', 'MAIN']
 }

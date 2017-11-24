@@ -79,7 +79,7 @@ export default {
   },
   methods: {
     handleDragPic (file) {
-      if ((this.config['image'] && this.config['image'].drag !== false) || !this.config['image']) {
+      if ((this.modulesMap['image'] && this.modulesMap['image'].drag !== false) || !this.modulesMap['image']) {
         this.saveCurrentRange()
         this.execCommand('insertImage', file)
       }
@@ -238,18 +238,9 @@ export default {
               module.styleInspectResult = true
               if (module.exclude) {
                 this.modules.forEach(m => {
-                  if (module.exclude.includes('ALL')) {
+                  m.forbidden = false
+                  if (module.exclude.includes(m.name)) {
                     m.forbidden = true
-                  } else if (module.exclude.includes('ALL_BUT_MYSELF')) {
-                    m.forbidden = true
-                    this.$nextTick(() => {
-                      module.forbidden = false
-                    })
-                  } else {
-                    m.forbidden = false
-                    if (module.exclude.includes(m.name)) {
-                      m.forbidden = true
-                    }
                   }
 
                   if (m.type === 'fn') {

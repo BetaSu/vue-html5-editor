@@ -1,11 +1,22 @@
 import lrz from 'lrz'
 
 const insertImage = function (rh, arg) {
+  // forbidden logic
+  let forbidden = false
+  let actives = rh.editor.activeModules
+  actives.forEach(name => {
+    let module = rh.editor.modulesMap[name]
+    if (module && module.exclude && module.exclude.includes('image')) {
+      forbidden = true
+    }
+  })
+  if (forbidden) return
+
   let returnData = {
     origin: arg
   }
   let editor = rh.editor
-  let config = editor.config['image']
+  let config = editor.modulesMap['image']
   if (!config) {
     throw new Error('image config load fail')
   }

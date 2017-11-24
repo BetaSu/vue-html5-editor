@@ -12,12 +12,7 @@ const imgType = {
 
 export default {
   bind (el, binding, vnode) {
-
-    // let onDragEnter = e => {
-    //   console.log('enter')
-    //   const selection = window.getSelection ? window.getSelection() : document.getSelection()
-    //   selection.removeAllRanges()
-    // }
+    let editor = vnode.context
     let onDragOver = e => {
       e.preventDefault()
       const selection = window.getSelection ? window.getSelection() : document.getSelection()
@@ -26,6 +21,8 @@ export default {
       } catch (e) {
         selection.collapse(e.target, 0)
       }
+      editor.saveCurrentRange()
+      editor.styleInspect()
     }
     let onDragLeave = e => {
       e.preventDefault()
