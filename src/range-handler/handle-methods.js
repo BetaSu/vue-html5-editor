@@ -1,4 +1,5 @@
 import am from './assist-methods'
+import constant from '../constant-config'
 
 const m = {
   /**
@@ -263,7 +264,7 @@ const m = {
    * @return {node} row
    **/
   getRow (node) {
-    let rows = Array.from(am.editZone().querySelectorAll('p'))
+    let rows = Array.from(am.editZone().children)
     let result
     rows.forEach(row => {
       if (row.contains(node)) {

@@ -57,6 +57,17 @@ const methods = {
     }
     methods.editZone_cache = document.querySelector('[data-editor="content"]')
     return methods.editZone_cache
+  },
+  /*
+   * set range at target node
+   **/
+  setRangeAt (node) {
+    const range = document.createRange()
+    range.setStart(node, 0)
+    range.setEnd(node, 0)
+    let selection = methods.getSelection()
+    selection.removeAllRanges()
+    selection.addRange(range)
   }
 }
 

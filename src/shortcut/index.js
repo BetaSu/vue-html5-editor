@@ -7,7 +7,7 @@ export default {
       editor.execCommand('outdent')
     }
   },
-  smartIndent: {
+  indent: {
     keyCode: 9,
     handler (editor, e) {
       e.preventDefault()
@@ -18,6 +18,12 @@ export default {
     keyCode: 8,
     handler (editor, e) {
       editor.execCommand('delete', e, true)
+    }
+  },
+  enter: {
+    keyCode: 13,
+    handler (editor, e) {
+      editor.execCommand('enter', e, true)
     }
   }
 }

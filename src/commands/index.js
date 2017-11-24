@@ -211,7 +211,7 @@ const commands = {
     function doIndent(type, node) {
       switch (type) {
         case 'LI':
-          let curLevel = rh.howManyNestAncestorSameTag(node, 'UL')
+          let curLevel = rh.howManyNestAncestorSameTag(node, 'UL') || rh.howManyNestAncestorSameTag(node, 'OL')
           if (curLevel >= constant.MAX_INDENT_LEVEL) break
           document.execCommand('indent', false, arg)
           break
@@ -522,16 +522,66 @@ const commands = {
     //   }
     // }
   },
+  'insertUnorderedList' (rh, arg) {
+    console.log('in')
+    // do not insert ul into a row
+    document.execCommand('insertUnorderedList', false, null)
+    let startNode = rh.getSelection().anchorNode
+
+    // // special treatment for li in first row
+    // if (startNode.nodeName === 'LI') {
+    //   let row = rh.getRow(startNode)
+    //   if (row === rh.editZone().firstElementChild && startNode === row.firstElementChild) {
+    //     console.log('it is me!')
+    //   }
+    //
+    // }
+    let row = rh.getRow(startNode)
+    if (row) {
+      let ul = row.firstElementChild
+      if (ul.nodeName === 'UL') {
+        row.parentNode.replaceChild(ul, row)
+      }
+    } else {
+      let startNode = rh.getSelection().anchorNode
+      if (startNode === rh.editZone()) {
+        let row = rh.newRow({br: true})
+        commands['insertHTML'](rh, row.outerHTML)
+      }
+    }
+  },
+  'insertOrderedList' (rh, arg) {
+    // do not insert ol into a row, just let it become a row
+    document.execCommand('insertOrderedList', false, null)
+    let startNode = rh.getSelection().anchorNode
+    let row = rh.getRow(startNode)
+    if (row) {
+      let ul = row.firstElementChild
+      if (ul.nodeName === 'OL') {
+        row.parentNode.replaceChild(ul, row)
+      }
+    } else {
+      let startNode = rh.getSelection().anchorNode
+      if (startNode === rh.editZone()) {
+        let row = rh.newRow({br: true})
+        commands['insertHTML'](rh, row.outerHTML)
+      }
+    }
+  },
   'delete' (rh, e) {
-    console.log('delete')
     // restore first row
     let node = rh.range.commonAncestorContainer
-
+    console.log('delete', node)
     // cancel list when li is empty
     if (node.nodeName === 'LI' && rh.range.collapsed && rh.range.startOffset === 0) {
-      document.execCommand('insertUnorderedList', false, null)
-      e.stopPropagation()
       e.preventDefault()
+      let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
+      if (ulOrOl.nodeName === 'UL') {
+        commands['insertUnorderedList'](rh, e)
+      }
+      if (ulOrOl.nodeName === 'OL') {
+        commands['insertOrderedList'](rh, e)
+      }
       return
     }
     node = rh.findSpecialAncestor(node, constant.ROW_TAG)
@@ -577,11 +627,21 @@ const commands = {
       }
     }
   },
-  'keydown' (rh, e) {
-    // maintain row
+  'enter' (rh, e) {
     if (rh.range.collapsed) {
       let node = rh.range.commonAncestorContainer
-      // if (node.nodeType === Node.TEXT_NODE && )
+
+      // rewrite li enter logic
+      if (node.nodeName === 'LI' && node.innerText.replace(/\n/g, '') === '') {
+        e.preventDefault()
+        let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
+        if (ulOrOl.nodeName === 'UL') {
+          commands['insertUnorderedList'](rh, e)
+        }
+        if (ulOrOl.nodeName === 'OL') {
+          commands['insertOrderedList'](rh, e)
+        }
+      }
     }
     // console.log('rh', rh.range)
   }

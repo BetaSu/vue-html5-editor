@@ -159,7 +159,7 @@ export default {
       }
     },
     styleInspect () {
-      console.log('styleInspect')
+      console.log('styleInspect', this.range)
       if (this.range) {
         // find all active modules in range
         this.activeModules = []
@@ -285,17 +285,17 @@ export default {
       }
       this.styleInspect()
     }, false)
-    toolbar.addEventListener('mousedown', this.saveCurrentRange, false)
+    // toolbar.addEventListener('mousedown', this.saveCurrentRange, false)
     content.addEventListener('keyup', e => {
       this.$emit('change', content.innerHTML)
       this.saveCurrentRange()
       this.styleInspect()
     }, false)
-    content.addEventListener('mouseout', (e) => {
-      if (e.target === content) {
-        this.saveCurrentRange()
-      }
-    }, false)
+    // content.addEventListener('mouseout', (e) => {
+    //   if (e.target === content) {
+    //     this.saveCurrentRange()
+    //   }
+    // }, false)
     this.touchHandler = (e) => {
       if (content.contains(e.target)) {
         this.saveCurrentRange()
@@ -306,7 +306,6 @@ export default {
 
     // handle shortcut
     content.addEventListener('keydown', e => {
-      this.execCommand('keydown', e, true)
       let item = this.shortcut[e.keyCode]
       if (item && item.length) {
         item.forEach(s => {
