@@ -3,7 +3,6 @@ export default {
   icon: 'iui-icon iui-icon-quote',
   show: true,
   type: 'block',
-  exclude: ['todo', 'ul'],
   mounted (editor) {
     editor.execCommand('initQuote')
   },
