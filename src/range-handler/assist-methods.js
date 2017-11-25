@@ -61,10 +61,15 @@ const methods = {
   /*
    * set range at target node
    **/
-  setRangeAt (node) {
+  setRangeAt (node, checkAll) {
     const range = document.createRange()
-    range.setStart(node, 0)
-    range.setEnd(node, 0)
+    if (checkAll) {
+      range.setStart(node, 0)
+      range.setEnd(node, node.childNodes ? node.childNodes.length : 0)
+    } else {
+      range.setStart(node, 0)
+      range.setEnd(node, 0)
+    }
     let selection = methods.getSelection()
     selection.removeAllRanges()
     selection.addRange(range)

@@ -6,8 +6,8 @@ export default {
   mounted (editor) {
     editor.execCommand('initQuote')
   },
-  handler: function (editor, module) {
-    let isInQuote = editor.activeModules.includes(module.name)
-    editor.execCommand('quote', isInQuote)
+  handler: function (rh, module) {
+    let isInQuote = rh.editor.activeModules.includes(module.name)
+    rh.editor.execCommand('quote', isInQuote)
   }
 }

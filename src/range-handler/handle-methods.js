@@ -128,6 +128,11 @@ const m = {
       'FONT', 'IMG', 'S', 'SMALL', 'SPAN', 'STRIKE', 'STRONG', 'U', 'SUB', 'SUP']
     return inlineNodeNames.includes(node.nodeName)
   },
+  isInlineOrText (node) {
+    let isInline = m.isInlineElement(node)
+    let isText = node.nodeType === Node.TEXT_NODE
+    return isInline || isText
+  },
   /*
    * find all specify nodes in an ancestor through search opinions(unique attributes)
    * @param node
@@ -163,6 +168,7 @@ const m = {
    **/
   howManyNestAncestorSameTag (node, ancestorNodeName) {
     let num = 0
+    ancestorNodeName = ancestorNodeName.toUpperCase()
     while (node && (node !== am.editZone())) {
       if (node.nodeName === ancestorNodeName) {
         num++
@@ -272,6 +278,60 @@ const m = {
       }
     })
     return result
+  },
+  /*
+   * whether current node is a row
+   **/
+  isRow (node) {
+    let rows = Array.from(am.editZone().children)
+    return rows.includes(node)
+  },
+  /*
+   * create a wrapper for inline element in same row
+   **/
+  createWrapperForInline (node, wrapperNodeName, seperateByBr = true) {
+    if (!m.isInlineOrText(node)) return node
+    let elements = [node]
+    searchLeft()
+    searchRight()
+    let newRow = document.createElement(wrapperNodeName)
+    elements.forEach((ele, index) => {
+      if (index !== elements.length - 1) {
+        newRow.appendChild(ele)
+        return
+      }
+      let lastOne = ele.cloneNode(true)
+      newRow.appendChild(lastOne)
+      ele.parentNode.replaceChild(newRow, ele)
+    })
+
+    if (seperateByBr) {
+      handlerBr(newRow.previousSibling, true)
+      handlerBr(newRow.nextSibling, false)
+    }
+    return newRow
+
+    function handlerBr(node, direction) {
+      if (node && node.nodeName === 'BR') {
+        let nextDir = direction ? 'previousSibling' : 'nextSibling'
+        let targetNode = node[nextDir]
+        if (!targetNode) return
+        if (targetNode.nodeName === 'BR') {
+          return handlerBr(targetNode, direction)
+        }
+        m.createWrapperForInline(targetNode, wrapperNodeName, seperateByBr)
+      }
+    }
+    function searchLeft() {
+      while (elements[0].previousSibling && m.isInlineOrText(elements[0].previousSibling)) {
+        elements.unshift(elements[0].previousSibling)
+      }
+    }
+    function searchRight() {
+      while (elements[elements.length - 1].nextSibling && m.isInlineOrText(elements[elements.length - 1].nextSibling)) {
+        elements.push(elements[elements.length - 1].nextSibling)
+      }
+    }
   }
 }
 

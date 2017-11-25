@@ -150,7 +150,7 @@ export default {
     activeModule(module){
       if (module.forbidden) return
       if (typeof module.handler === 'function') {
-        module.handler(this, module)
+        module.handler(new RangeHandler(this.range, this), module)
         this.$nextTick(() => {
           this.saveCurrentRange()
           this.styleInspect()
@@ -291,11 +291,11 @@ export default {
       this.saveCurrentRange()
       this.styleInspect()
     }, false)
-    // content.addEventListener('mouseout', (e) => {
-    //   if (e.target === content) {
-    //     this.saveCurrentRange()
-    //   }
-    // }, false)
+    content.addEventListener('mouseout', (e) => {
+      if (e.target === content) {
+        this.saveCurrentRange()
+      }
+    }, false)
     this.touchHandler = (e) => {
       if (content.contains(e.target)) {
         this.saveCurrentRange()
@@ -306,6 +306,7 @@ export default {
 
     // handle shortcut
     content.addEventListener('keydown', e => {
+      this.execCommand('keydown', e, true)
       let item = this.shortcut[e.keyCode]
       if (item && item.length) {
         item.forEach(s => {

@@ -8,7 +8,6 @@ import image from './image/index'
 import info from './info/index'
 import link from './link/index'
 import table from './table/index'
-import text from './text/index'
 import undo from './undo/index'
 import unlink from './unlink/index'
 import bold from './bold'
@@ -25,7 +24,6 @@ import linethrough from './linethrough'
  * build-in moduls
  */
 export default [
-  text,
   color,
   font,
   align,

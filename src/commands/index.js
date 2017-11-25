@@ -527,20 +527,12 @@ const commands = {
     // do not insert ul into a row
     document.execCommand('insertUnorderedList', false, null)
     let startNode = rh.getSelection().anchorNode
-
-    // // special treatment for li in first row
-    // if (startNode.nodeName === 'LI') {
-    //   let row = rh.getRow(startNode)
-    //   if (row === rh.editZone().firstElementChild && startNode === row.firstElementChild) {
-    //     console.log('it is me!')
-    //   }
-    //
-    // }
     let row = rh.getRow(startNode)
+    row = rh.createWrapperForInline(row, constant.ROW_TAG)
     if (row) {
-      let ul = row.firstElementChild
-      if (ul.nodeName === 'UL') {
-        row.parentNode.replaceChild(ul, row)
+      let maybeIsUl = row.firstElementChild
+      if (maybeIsUl && maybeIsUl.nodeName === 'UL') {
+        row.parentNode.replaceChild(maybeIsUl, row)
       }
     } else {
       let startNode = rh.getSelection().anchorNode
@@ -549,16 +541,24 @@ const commands = {
         commands['insertHTML'](rh, row.outerHTML)
       }
     }
+
+    // special treatment for first ul>li at first row,to let style inspect run
+    if (startNode.nodeName === 'LI' && startNode.parentNode === rh.editZone().firstElementChild) {
+      commands['insertHTML'](rh, '&#8203;')
+      startNode.innerHTML = ''
+      return
+    }
   },
   'insertOrderedList' (rh, arg) {
     // do not insert ol into a row, just let it become a row
     document.execCommand('insertOrderedList', false, null)
     let startNode = rh.getSelection().anchorNode
     let row = rh.getRow(startNode)
+    row = rh.createWrapperForInline(row, constant.ROW_TAG)
     if (row) {
-      let ul = row.firstElementChild
-      if (ul.nodeName === 'OL') {
-        row.parentNode.replaceChild(ul, row)
+      let maybeIsUl = row.firstElementChild
+      if (maybeIsUl && maybeIsUl.nodeName === 'OL') {
+        row.parentNode.replaceChild(maybeIsUl, row)
       }
     } else {
       let startNode = rh.getSelection().anchorNode
@@ -566,6 +566,13 @@ const commands = {
         let row = rh.newRow({br: true})
         commands['insertHTML'](rh, row.outerHTML)
       }
+    }
+
+    // special treatment for first ul>li at first row,to let style inspect run
+    if (startNode.nodeName === 'LI' && startNode.parentNode === rh.editZone().firstElementChild) {
+      commands['insertHTML'](rh, '&#8203;')
+      startNode.innerHTML = ''
+      return
     }
   },
   'delete' (rh, e) {
@@ -628,11 +635,12 @@ const commands = {
     }
   },
   'enter' (rh, e) {
+    console.log('enter')
     if (rh.range.collapsed) {
       let node = rh.range.commonAncestorContainer
 
       // rewrite li enter logic
-      if (node.nodeName === 'LI' && node.innerText.replace(/\n/g, '') === '') {
+      if (rh.findSpecialAncestor(node, 'li') && node.innerText && node.innerText.replace(/\n/g, '') === '') {
         e.preventDefault()
         let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
         if (ulOrOl.nodeName === 'UL') {
@@ -643,7 +651,17 @@ const commands = {
         }
       }
     }
-    // console.log('rh', rh.range)
+  },
+  'keydown' (rh, e) {
+    let node = rh.range.commonAncestorContainer
+
+    // to keep text wrap by a row
+    if (node.nodeType === Node.TEXT_NODE && node.parentNode === rh.editZone()) {
+      let row = rh.newRow()
+      row.innerText = node.nodeValue
+      node.parentNode.replaceChild(row, node)
+      return
+    }
   }
 }
 commands.insertImage = insertImage

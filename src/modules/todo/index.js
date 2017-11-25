@@ -7,7 +7,7 @@ export default {
   mounted (editor) {
     editor.execCommand('initTodo')
   },
-  handler (editor) {
-    editor.execCommand('todo')
+  handler (rh) {
+    rh.editor.execCommand('todo')
   }
 }
