@@ -3,9 +3,12 @@ export default {
   icon: 'iui-icon iui-icon-underline',
   show: true,
   handler: function (rh, module) {
-    if (module.styleInspectResult) {
-      module.styleInspectResult = false
+    if (module.moduleInspectResult) {
+      module.moduleInspectResult = false
     }
     rh.editor.execCommand('underline')
+  },
+  inspect (add) {
+    add('tag', 'U').add('style', {'text-decoration-line': 'underline'})
   }
 }

@@ -1,32 +1,9 @@
 import insertImage from './insertImage'
+import fontSize from './fontSize'
 import { isObj } from '../util'
 import constant from '../constant-config'
 
-const fontSizeMap = {
-  3: 'medium',
-  4: 'large',
-  5: 'x-large',
-  6: 'xx-large'
-}
-
 const commands = {
-  'fontSize' (rh, arg) {
-    if (rh.range.collapsed) {
-      let node = rh.range.commonAncestorContainer
-      let row = rh.getRow(node)
-      if (row) {
-        let allOffspring = Array.from(row.querySelectorAll('*'))
-        allOffspring.forEach(node => {
-          node.style.fontSize = ''
-        })
-        row.style.fontSize = fontSizeMap[arg]
-      }
-    } else {
-      document.execCommand('styleWithCSS', false)
-      document.execCommand('fontSize', false, arg)
-      document.execCommand('styleWithCSS', true)
-    }
-  },
   /*
    * add a style attribute in range(have bug)
    * @param {obj} arg include
@@ -665,5 +642,6 @@ const commands = {
   }
 }
 commands.insertImage = insertImage
+commands.fontSize = fontSize
 
 export default commands

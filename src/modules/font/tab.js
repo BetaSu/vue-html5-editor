@@ -12,7 +12,7 @@ export default {
       if (val) {
         this.choosed = val
       } else {
-        this.choosed = this.fontAttrMap['MAIN']
+        this.choosed = this.fontAttrMap.medium
       }
     }
   },
@@ -42,6 +42,6 @@ export default {
     }
   },
   mounted () {
-    this.choosed = this.fontAttrMap.MAIN
+    this.choosed = this.fontAttrMap.medium
   }
 }

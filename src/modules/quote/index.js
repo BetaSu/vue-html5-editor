@@ -9,5 +9,10 @@ export default {
   handler: function (rh, module) {
     let isInQuote = rh.editor.activeModules.includes(module.name)
     rh.editor.execCommand('quote', isInQuote)
+  },
+  inspect (add) {
+    add('attribute', {
+      'data-editor-quote': ''
+    })
   }
 }

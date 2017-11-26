@@ -1,10 +1,8 @@
-import RangeHandler from '../range-handler'
-import './style.css'
+import RH from '../range-handler'
+// import './style.css'
 import template from './editor.html'
 import dragPic from './drag-pic'
-import inspectForWrapper from './style-inspect-for-wrapper'
-import inspectForStyle from './style-inspect-for-style'
-import inspectForBlock from './style-inspect-for-block'
+import Inspector from '../module-inspect'
 
 export default {
   template,
@@ -78,6 +76,12 @@ export default {
     }
   },
   methods: {
+    getCurActiveModuleItem () {
+      return Inspector.activeItems
+    },
+    clearActiveModuleItem () {
+      Inspector.activeItems = {}
+    },
     handleDragPic (file) {
       if ((this.modulesMap['image'] && this.modulesMap['image'].drag !== false) || !this.modulesMap['image']) {
         this.saveCurrentRange()
@@ -104,12 +108,9 @@ export default {
         this.restoreSelection()
       }
       if (this.range) {
-        new RangeHandler(this.range, this).execCommand(command, arg)
+        new RH(this.range, this).execCommand(command, arg)
       }
       this.$emit('change', this.$refs.content.innerHTML)
-    },
-    getCurrentRange(){
-      return this.range
     },
     saveCurrentRange(){
       const selection = window.getSelection ? window.getSelection() : document.getSelection()
@@ -137,8 +138,7 @@ export default {
         selection.addRange(this.range)
       } else {
         const content = this.$refs.content
-        const row = document.createElement('p')
-        row.appendChild(document.createElement('br'))
+        const row = RH.prototype.newRow({br: true})
         const range = document.createRange()
         content.appendChild(row)
         range.setStart(row, 0)
@@ -150,7 +150,7 @@ export default {
     activeModule(module){
       if (module.forbidden) return
       if (typeof module.handler === 'function') {
-        module.handler(new RangeHandler(this.range, this), module)
+        module.handler(new RH(this.range, this), module)
         this.$nextTick(() => {
           this.saveCurrentRange()
           this.styleInspect()
@@ -159,110 +159,55 @@ export default {
       }
     },
     styleInspect () {
-      console.log('styleInspect', this.range)
       if (this.range) {
-        // find all active modules in range
+        this.clearActiveModuleItem()
         this.activeModules = []
-        let texts = new RangeHandler(this.range, this).getAllTextNodesInRange()
+        let texts = new RH(this.range, this).getAllTextNodesInRange()
         if (texts.length === 0 && this.range.collapsed) {
-          let node = this.range.commonAncestorContainer
-          if (node.nodeType === Node.TEXT_NODE) {
-            texts.push(node)
-          }
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            let isBlockModule = false
-            // is in a block
-            Object.keys(inspectForBlock).forEach(moduleName => {
-              if (inspectForBlock[moduleName](node)) {
-                this.activeModules.push(moduleName)
-                isBlockModule = true
-              }
-            })
-            // is a new row with no content
-            if (!isBlockModule) {
-              let wrapperInspectResult = inspectForWrapper(node)
-              let styleInspectResult = inspectForStyle(node)
-              styleInspectResult.forEach((style) => {
-                wrapperInspectResult.push(style)
-              })
-              this.activeModules.push(wrapperInspectResult)
-            }
-          }
+          texts.push(this.range.commonAncestorContainer)
         }
-        let isBlockModule = false
+        // texts duplicate removal
+        let textAftetDR = []
         texts.forEach(text => {
-          let node = text.parentNode
-          Object.keys(inspectForBlock).forEach(moduleName => {
-            if (inspectForBlock[moduleName](node)) {
-              this.activeModules.push(moduleName)
-              isBlockModule = true
-            }
-          })
-          // current target is not a block type module
-          if (!isBlockModule) {
-            let wrapperInspectResult = inspectForWrapper(node)
-            let styleInspectResult = inspectForStyle(node)
-            styleInspectResult.forEach((style) => {
-              wrapperInspectResult.push(style)
-            })
-            this.activeModules.push(wrapperInspectResult)
+          if (text.nodeType === Node.TEXT_NODE) {
+            text = text.parentNode
+          }
+          if (!textAftetDR.includes(text)) {
+            textAftetDR.push(text)
           }
         })
 
-        // merge same style inspect result
-        let sameStyleMap = {}
-        this.activeModules.forEach(m => {
-          if (typeof m === 'string') {
-            sameStyleMap[m] = sameStyleMap[m] ? sameStyleMap[m] + 1 : 1
-          }
-          if (Array.isArray(m)) {
-            m = Array.from(new Set(m))
-            m.forEach(am => {
-              sameStyleMap[am] = sameStyleMap[am] ? sameStyleMap[am] + 1 : 1
-            })
-          }
-        })
-        let mergedStyle = []
-        Object.keys(sameStyleMap).forEach(m => {
-          if (sameStyleMap[m] === this.activeModules.length) {
-            mergedStyle.push(m)
-          }
-        })
-        this.activeModules = mergedStyle
+        let tagResult = Inspector.removeDuplate(Inspector.run('tag', textAftetDR))
+        let styleResult = Inspector.removeDuplate(Inspector.run('style', textAftetDR))
+        let attributeResult = Inspector.removeDuplate(Inspector.run('attribute', textAftetDR))
+        this.activeModules = Array.from(new Set(tagResult.concat(styleResult, attributeResult)))
 
         // handle style inspect logic
         if (this.activeModules.length) {
+          let excludeList = []
           this.modules.forEach(module => {
-            module.styleInspectResult = false
-            if (this.activeModules.includes(module.name)) {
-              module.styleInspectResult = true
-              if (module.exclude) {
-                this.modules.forEach(m => {
-                  m.forbidden = false
-                  if (module.exclude.includes(m.name)) {
-                    m.forbidden = true
-                  }
-
-                  if (m.type === 'fn') {
-                    m.forbidden = false
-                  }
-                })
+            module.moduleInspectResult = false
+            let moduleName = module.name
+            if (this.activeModules.includes(moduleName)) {
+              module.moduleInspectResult = true
+              excludeList = excludeList.concat(module.exclude)
+              let curModuleActiveItem = this.getCurActiveModuleItem()[moduleName]
+              if (typeof curModuleActiveItem === 'string') {
+                module.moduleInspectResult = curModuleActiveItem || 'ALL'
               }
             }
-            if (Array.isArray(module.contains)) {
-              this.activeModules.forEach(a => {
-                if (module.contains.includes(a)) {
-                  module.styleInspectResult = a
-                }
-              })
-            }
+            excludeList = Array.from(new Set(excludeList))
+            excludeList.forEach(exc => {
+              let excModule = this.modulesMap[exc]
+              if (excModule && excModule.type !== 'fn') {
+                excModule.forbidden = true
+              }
+            })
           })
         } else {
           this.modules.forEach(module => {
-            if (module.type !== 'fn') {
-              module.forbidden = false
-              module.styleInspectResult = false
-            }
+            module.forbidden = false
+            module.moduleInspectResult = false
           })
         }
       }

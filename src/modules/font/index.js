@@ -4,5 +4,9 @@ export default {
   name: 'font',
   icon: 'iui-icon iui-icon-spanner',
   tab,
-  contains: ['HEADING', 'SUB_HEADING', 'SMALL_HEADING', 'MAIN']
+  inspect (add) {
+    add('style', {
+      'fontSize': ['xx-large', 'x-large', 'large', 'medium']
+    })
+  }
 }

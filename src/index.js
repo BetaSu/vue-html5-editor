@@ -3,7 +3,8 @@ import buildInModules from './modules/index'
 import buildInShortcut from './shortcut'
 import constantConfig from './constant-config'
 import editor from './editor/editor'
-import initStyleInspect from './editor/load-style-inspect-rules'
+import initExcludeRule from './module-inspect/load-module-inspect-exclude-rules'
+import Inspector from './module-inspect'
 import i18nZhCn from './i18n/zh-cn'
 import i18nEnUs from './i18n/en-us'
 import {
@@ -42,7 +43,7 @@ class Editor {
       let m = []
       options.modules.forEach(name => {
         if (typeof name !== 'string') {
-          throw new Error('modules\'s item must be a string')
+          throw new Error('modules\'s item must be string')
         }
         modules.forEach(module => {
           if (module.name === name) {
@@ -60,12 +61,17 @@ class Editor {
       if (isObj(curConfig) && isObj(moduleConfig)) {
         Object.assign(moduleConfig, curConfig)
       }
-      
-      module.styleInspectResult = null
+
+      module.moduleInspectResult = null
       module.forbidden = null
-      module.type = module.type || 'wrapper'
-      module.exclude = initStyleInspect(module, modules)
-      
+      if (typeof module.inspect === 'function') {
+        let inspector = new Inspector(module.name)
+        module.inspect(inspector.add.bind(inspector))
+      } else {
+        module.type = 'fn'
+      }
+      module.exclude = initExcludeRule(module, modules)
+
       if (module.tab) {
         module.tab.module = module
         module.tabName = `tab-${module.name}`
@@ -75,7 +81,7 @@ class Editor {
         module.icon = options.icons[module.name]
       }
       module.hasTab = !!module.tab
-      
+
       // prevent vue sync
       delete module.tab
 
@@ -101,16 +107,16 @@ class Editor {
       shortcut[keyCode].push(item)
       item.name = key
     })
-    
+
     // placeholder
     const placeholder = options.placeholder
 
     // commands
     const commands = options.commands
-    
+
     // spellcheck
     const spellcheck = options.spellcheck || false
-    
+
     const compo = mixin(editor, {
       data () {
         return {modules, locale, shortcut, modulesMap, commands, placeholder, spellcheck, constantConfig}

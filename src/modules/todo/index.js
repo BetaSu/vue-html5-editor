@@ -9,5 +9,10 @@ export default {
   },
   handler (rh) {
     rh.editor.execCommand('todo')
+  },
+  inspect (add) {
+    add('attribute', {
+      'data-editor-todo': ''
+    })
   }
 }

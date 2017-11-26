@@ -3,13 +3,13 @@
         <ul class="tabs">
             <template v-for="module in modules">
               <template v-if="!module.hasTab">
-                <li :title="locale[module.i18n]" class="tab" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)">
+                <li :title="locale[module.i18n]" class="tab" :class="{highLight: module.moduleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)">
                   <span class="icon" :class="module.icon"></span>
                 </li>
               </template>
               <template v-else>
                 <keep-alive>
-                  <li class="tab" :is="module.tabName" :activeItem="module.styleInspectResult" :class="{highLight: module.styleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)"></li>
+                  <li class="tab" :is="module.tabName" :activeItem="module.moduleInspectResult" :class="{highLight: module.moduleInspectResult, forbidden: module.forbidden}" @click="activeModule(module)"></li>
                 </keep-alive>
               </template>
             </template>
