@@ -7,12 +7,7 @@ export default {
   tab,
   config,
   inspect (add) {
-    // through fontSize
-
-    // add('style', {
-    //   'fontSize': ['xx-large', 'x-large', 'large', 'medium']
-    // })
-
+    
     // through font tag
     add('tag', 'font').add('attribute', {
       'size': Object.keys(config)

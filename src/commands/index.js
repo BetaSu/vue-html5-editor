@@ -354,10 +354,14 @@ const commands = {
           //   return
           // }
 
-          if (s.isCollapsed && (s.focusOffset === 0)) {
+          // cursor may at row or at quote block , so there are two judgement conditions
+          if (s.isCollapsed && (s.focusOffset === 0 || (s.baseNode !== node && s.focusOffset === 1))) {
             let rows = Array.from(quote.querySelector('[data-editor-quote-block]').children)
             rows.forEach((row, index) => {
-              if ((row === node || row.contains(node)) && index === 0) {
+              
+              // row and node has father-child relationship
+              if ((row === node || row.contains(node) || node.contains(row)) && index === 0) {
+
                 // only have one empty row in quote,then delete the quote
                 if (rows.length === 1 && row.innerHTML.replace(/<br>/g, '') === '') {
                   e.preventDefault()
@@ -366,17 +370,34 @@ const commands = {
                   rh.getSelection().collapse(newRow, 1)
                   return
                 } else {
+
                   // first row have content and previous element exist, then move cursor to previous element
                   let preRow = rh.getPreviousRow(quote)
-                  console.log('preRow', preRow)
                   if (preRow) {
                     e.preventDefault()
-                    // previous row is a quote  mark! 这里还有问题
-                    if (preRow.getAttribute('[data-editor-quote')) {
+
+                    // previous row is a quote
+                    if (preRow.getAttribute('data-editor-quote')) {
                       let lastEle = Array.from(preRow.querySelector('[data-editor-quote-block]').children).pop()
-                      rh.getSelection().collapse(lastEle, 1)
+                      try {
+                        rh.getSelection().collapse(lastEle, 1)
+                      } catch (e) {
+                        rh.getSelection().collapse(lastEle, 0)
+                      }
                       return
                     }
+
+                    // previous row is a todo
+                    if (preRow.getAttribute('data-editor-todo')) {
+                      let input = preRow.querySelector('[type="text"]')
+                      if (input) {
+                        e.preventDefault()
+                        input.focus()
+                      }
+                      return
+                    }
+
+                    // previous row is a row
                     try {
                       rh.getSelection().collapse(preRow, 1)
                     } catch (e) {
@@ -616,6 +637,7 @@ const commands = {
     let row = rh.getRow(node)
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
       let firstRow = rh.editZone().firstElementChild
+
       // first row cancel indent
       if (firstRow === row) {
         firstRow.style[constant.INDENT_STYLE_NAME] = ''
@@ -630,7 +652,7 @@ const commands = {
 
       // cursor focus on previous row's input if previous row is todo
       if (preRow && preRow.dataset && preRow.dataset.editorTodo) {
-        e.preventDefault()
+        row.parentNode.removeChild(row)
         let input = preRow.querySelector('input[type="text"]')
         if (input) {
           input.focus()

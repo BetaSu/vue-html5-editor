@@ -9,7 +9,7 @@ export default {
       if (val) {
         this.choosed = val
       } else {
-        this.choosed = this.fontAttrMap[Object.keys(this.fontAttrMap).shift()]
+        this.choosed = this.fontAttrMap[this.fontAttrMap['default']]
       }
     }
   },
@@ -42,6 +42,6 @@ export default {
   mounted () {
     this.curModule = this.$parent.modulesMap['font']
     this.fontAttrMap = this.curModule.config
-    this.choosed = this.fontAttrMap[Object.keys(this.fontAttrMap).shift()]
+    this.choosed = this.fontAttrMap[this.fontAttrMap['default']]
   }
 }
