@@ -1,24 +1,22 @@
-import config from './config'
 import template from './tab.html'
 import './style.styl'
+
 export default {
   template,
-  props: {
-    activeItem: ''
-  },
   watch: {
     activeItem (n) {
       let val = this.fontAttrMap[n]
       if (val) {
         this.choosed = val
       } else {
-        this.choosed = this.fontAttrMap['3']
+        this.choosed = this.fontAttrMap[Object.keys(this.fontAttrMap).shift()]
       }
     }
   },
   data () {
     return {
-      fontAttrMap: config,
+      fontAttrMap: {},
+      curModule: null,
       choosed: {},
       showList: false
     }
@@ -42,6 +40,8 @@ export default {
     }
   },
   mounted () {
-    this.choosed = this.fontAttrMap['3']
+    this.curModule = this.$parent.modulesMap['font']
+    this.fontAttrMap = this.curModule.config
+    this.choosed = this.fontAttrMap[Object.keys(this.fontAttrMap).shift()]
   }
 }

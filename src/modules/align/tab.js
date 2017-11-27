@@ -1,6 +1,11 @@
 import template from './tab.html'
 export default {
   template,
+  watch: {
+    activeItem (n) {
+      // do module inspect logic here
+    }
+  },
   data () {
     return {
       alignMap: {

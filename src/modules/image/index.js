@@ -11,5 +11,8 @@ export default {
     height: 1600,
     quality: 0.8
   },
-  tab
+  tab,
+  inspect (add) {
+    add('tag', 'img')
+  }
 }

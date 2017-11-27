@@ -1,6 +1,6 @@
 import insertImage from './insertImage'
 import fontSize from './fontSize'
-import { isObj } from '../util'
+import {isObj} from '../util'
 import constant from '../constant-config'
 
 const commands = {
@@ -16,6 +16,7 @@ const commands = {
         node.style[styleName] = arg[styleName]
       })
     }
+
     if (!isObj(arg)) return
     const textNodes = rh.getAllTextNodesInRange()
     if (!textNodes.length) {
@@ -257,13 +258,16 @@ const commands = {
       if (quote) {
         let texts = rh.getDescendantTextNodes(quote)
         let quoteRows = []
+        let rows = Array.from(quote.querySelector('[data-editor-quote-block').children)
         texts.forEach(text => {
           // find row in current quote row
-          let row = rh.findSpecialAncestor(text, constant.ROW_TAG, false, quote)
-          // maybe have bug
-          // if (!row) {
-          //   row = rh.findSpecialAncestor(text, 'div', false, quote)
-          // }
+          // let row = rh.findSpecialAncestor(text, constant.ROW_TAG, false, quote)
+          let row
+          rows.forEach(curRow => {
+            if (curRow.contains(text)) {
+              row = curRow
+            }
+          })
           if (!quoteRows.includes(row)) {
             quoteRows.push(row)
           }
@@ -287,6 +291,7 @@ const commands = {
     let br = document.createElement('br')
     let quoteBlock = document.createElement('section')
     let quoteBlockDiv = rh.newRow({tag: 'div'})
+    quoteBlockDiv.setAttribute('data-editor-quote-block', rh.createRandomId('quoteblock'))
     quoteBlock.appendChild(quoteBlockDiv)
     let id = rh.createRandomId('quote')
     quoteBlock.setAttribute('data-editor-quote', id)
@@ -306,7 +311,7 @@ const commands = {
       quoteBlockDiv.appendChild(qr)
     })
     container.appendChild(quoteBlock)
-    container.appendChild(br)
+    // container.appendChild(br)
     let aNode = rh.range.commonAncestorContainer
     // if range is not at edit zone, insertHTML would run fail
     if (aNode !== rh.editZone()) {
@@ -340,22 +345,45 @@ const commands = {
           }
         }
         if (e.keyCode === 8) {
-          if (ctn.replace('\n', '') === '' &&
-            (node.parentNode === quote || (node.parentNode.nodeName === 'DIV' && node === node.parentNode.firstElementChild))) {
-            let newRow = rh.newRow({br: true})
-            quote.parentNode.replaceChild(newRow, quote)
-            rh.getSelection().collapse(newRow, 1)
-            return
-          }
-          if (s.isCollapsed && s.focusOffset === 0) {
-            let quoteRow = rh.findSpecialAncestor(node, constant.ROW_TAG, false, quote)
-            let rows = Array.from(quoteRow.parentNode.children)
+          // if (ctn.replace('\n', '') === '' &&
+          //   (node.parentNode === quote || node.parentNode.getAttribute('data-editor-quote-block'))) {
+          //   let newRow = rh.newRow({br: true})
+          //   quote.parentNode.replaceChild(newRow, quote)
+          //   rh.getSelection().collapse(newRow, 1)
+          //   console.log('8 1')
+          //   return
+          // }
+
+          if (s.isCollapsed && (s.focusOffset === 0)) {
+            let rows = Array.from(quote.querySelector('[data-editor-quote-block]').children)
             rows.forEach((row, index) => {
-              if (row === quoteRow && index === 0) {
-                e.preventDefault()
-                let preRow = rh.getRow(quote.previousElementSibling)
-                if (preRow) {
-                  rh.getSelection().collapse(preRow, 0)
+              if ((row === node || row.contains(node)) && index === 0) {
+                // only have one empty row in quote,then delete the quote
+                if (rows.length === 1 && row.innerHTML.replace(/<br>/g, '') === '') {
+                  e.preventDefault()
+                  let newRow = rh.newRow({br: true})
+                  quote.parentNode.replaceChild(newRow, quote)
+                  rh.getSelection().collapse(newRow, 1)
+                  return
+                } else {
+                  // first row have content and previous element exist, then move cursor to previous element
+                  let preRow = rh.getPreviousRow(quote)
+                  console.log('preRow', preRow)
+                  if (preRow) {
+                    e.preventDefault()
+                    // previous row is a quote  mark! 这里还有问题
+                    if (preRow.getAttribute('[data-editor-quote')) {
+                      let lastEle = Array.from(preRow.querySelector('[data-editor-quote-block]').children).pop()
+                      rh.getSelection().collapse(lastEle, 1)
+                      return
+                    }
+                    try {
+                      rh.getSelection().collapse(preRow, 1)
+                    } catch (e) {
+                      rh.getSelection().collapse(preRow, 0)
+                    }
+                    return
+                  }
                 }
               }
             })
@@ -500,55 +528,71 @@ const commands = {
     // }
   },
   'insertUnorderedList' (rh, arg) {
-    console.log('in')
+    console.log('insertUnorderedList')
     // do not insert ul into a row
     document.execCommand('insertUnorderedList', false, null)
     let startNode = rh.getSelection().anchorNode
     let row = rh.getRow(startNode)
+
+    // startNode is edit zone
+    if (!row) return
+
     row = rh.createWrapperForInline(row, constant.ROW_TAG)
+
     if (row) {
+      // let ul be a row
       let maybeIsUl = row.firstElementChild
       if (maybeIsUl && maybeIsUl.nodeName === 'UL') {
         row.parentNode.replaceChild(maybeIsUl, row)
+        row = maybeIsUl
       }
     } else {
       let startNode = rh.getSelection().anchorNode
       if (startNode === rh.editZone()) {
-        let row = rh.newRow({br: true})
+        row = rh.newRow({br: true})
         commands['insertHTML'](rh, row.outerHTML)
       }
     }
 
-    // special treatment for first ul>li at first row,to let style inspect run
-    if (startNode.nodeName === 'LI' && startNode.parentNode === rh.editZone().firstElementChild) {
+    // special treatment for ul>li, to let module inspect run
+    if (row) {
+      let innerHTML = row.innerHTML
       commands['insertHTML'](rh, '&#8203;')
-      startNode.innerHTML = ''
+      row.innerHTML = innerHTML
       return
     }
   },
   'insertOrderedList' (rh, arg) {
-    // do not insert ol into a row, just let it become a row
+    // do not insert ul into a row
     document.execCommand('insertOrderedList', false, null)
     let startNode = rh.getSelection().anchorNode
     let row = rh.getRow(startNode)
+
+    // startNode is edit zone
+    if (!row) return
+
     row = rh.createWrapperForInline(row, constant.ROW_TAG)
+
     if (row) {
+      // let ul be a row
       let maybeIsUl = row.firstElementChild
       if (maybeIsUl && maybeIsUl.nodeName === 'OL') {
         row.parentNode.replaceChild(maybeIsUl, row)
+        row = maybeIsUl
       }
     } else {
       let startNode = rh.getSelection().anchorNode
       if (startNode === rh.editZone()) {
-        let row = rh.newRow({br: true})
+        row = rh.newRow({br: true})
         commands['insertHTML'](rh, row.outerHTML)
       }
     }
 
-    // special treatment for first ul>li at first row,to let style inspect run
-    if (startNode.nodeName === 'LI' && startNode.parentNode === rh.editZone().firstElementChild) {
+    // special treatment for ul>li, to let module inspect run
+    if (row) {
+      let innerHTML = row.innerHTML
       commands['insertHTML'](rh, '&#8203;')
-      startNode.innerHTML = ''
+      row.innerHTML = innerHTML
       return
     }
   },
@@ -557,7 +601,7 @@ const commands = {
     let node = rh.range.commonAncestorContainer
     console.log('delete', node)
     // cancel list when li is empty
-    if (node.nodeName === 'LI' && rh.range.collapsed && rh.range.startOffset === 0) {
+    if ((rh.findSpecialAncestor(node, 'li')) && rh.range.collapsed && rh.range.startOffset === 0) {
       e.preventDefault()
       let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
       if (ulOrOl.nodeName === 'UL') {
@@ -568,39 +612,22 @@ const commands = {
       }
       return
     }
-    node = rh.findSpecialAncestor(node, constant.ROW_TAG)
-    if (!node) return
-    if (rh.range.collapsed && (rh.range.startOffset === 0 || (node.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
-      if (node) {
-        let firstRow = rh.editZone().firstElementChild
-        if (firstRow.nodeName !== constant.ROW_TAG_UPPERCASE) return
-        if (firstRow === node) {
-          firstRow.style[constant.INDENT_STYLE_NAME] = ''
-          e.preventDefault()
-        } else if (firstRow.contains(node)) {
-          e.preventDefault()
-          let newRow = rh.newRow({br: true, tag: constant.ROW_TAG})
-          firstRow.parentNode.replaceChild(newRow, firstRow)
-          rh.getSelection().collapse(newRow, 1)
-        }
+
+    let row = rh.getRow(node)
+    if (rh.range.collapsed && (rh.range.startOffset === 0 || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
+      let firstRow = rh.editZone().firstElementChild
+      // first row cancel indent
+      if (firstRow === row) {
+        firstRow.style[constant.INDENT_STYLE_NAME] = ''
+        e.preventDefault()
       }
     }
 
-    if (node.innerHTML.replace(/<br>/g, '') === '') {
+    // empty row
+    if (row.innerHTML.replace(/<br>/g, '') === '') {
       // get previous row with content
-      let preRow
-      let rows = Array.from(node.parentNode.querySelectorAll(constant.ROW_TAG))
-      let rowIndex = null
-      rows.forEach((row, index) => {
-        if (row === node) {
-          rowIndex = index
-        }
-        if (rowIndex === null) {
-          if (row.innerHTML.replace(/<br>/g, '') !== '') {
-            preRow = row
-          }
-        }
-      })
+      let preRow = rh.getPreviousRow(row)
+
       // cursor focus on previous row's input if previous row is todo
       if (preRow && preRow.dataset && preRow.dataset.editorTodo) {
         e.preventDefault()
@@ -608,6 +635,7 @@ const commands = {
         if (input) {
           input.focus()
         }
+        return
       }
     }
   },

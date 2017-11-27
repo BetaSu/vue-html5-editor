@@ -3,7 +3,7 @@ const methods = {
   /*
    * func create a new row element
    * @param {obj} data
-   *          tag {str} default: 'div'
+   *          tag {str} 
    *          contenteditable {boolean} default: true
    *          id {boolean} whether need a id default: false
    *          br {boolean} whether need a br element after current row element default: false

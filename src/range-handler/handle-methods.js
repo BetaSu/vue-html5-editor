@@ -280,6 +280,12 @@ const m = {
     return result
   },
   /*
+   * return all rows 
+   **/
+  getRows () {
+    return Array.from(am.editZone().children)
+  },
+  /*
    * whether current node is a row
    **/
   isRow (node) {
@@ -332,6 +338,26 @@ const m = {
         elements.push(elements[elements.length - 1].nextSibling)
       }
     }
+  },
+  /*
+   * get node's previous row which has content  
+   **/
+  getPreviousRow (node) {
+    let row = m.getRow(node)
+    let preRow
+    let rows = m.getRows()
+    let rowIndex = null
+    rows.forEach((curRow, index) => {
+      if (curRow === row) {
+        rowIndex = index
+      }
+      if (rowIndex === null) {
+        if (curRow.innerHTML !== '') {
+          preRow = curRow
+        }
+      }
+    })
+    return preRow
   }
 }
 
