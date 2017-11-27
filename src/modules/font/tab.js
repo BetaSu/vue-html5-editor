@@ -12,7 +12,7 @@ export default {
       if (val) {
         this.choosed = val
       } else {
-        this.choosed = this.fontAttrMap.medium
+        this.choosed = this.fontAttrMap['3']
       }
     }
   },
@@ -30,7 +30,7 @@ export default {
     },
     changeAttr (val) {
       this.choosed = val
-      this.$parent.execCommand('lineHeight', val.lineHeight)
+      // this.$parent.execCommand('lineHeight', val.lineHeight)
       this.$parent.execCommand('fontSize', val.fontSize)
       this.showList = false
     },
@@ -42,6 +42,6 @@ export default {
     }
   },
   mounted () {
-    this.choosed = this.fontAttrMap.medium
+    this.choosed = this.fontAttrMap['3']
   }
 }
