@@ -8,7 +8,7 @@ export default {
     editor.execCommand('initTodo')
   },
   handler (rh) {
-    rh.editor.execCommand('todo')
+    rh.editor.execCommand('todo', rh.range.commonAncestorContainer)
   },
   inspect (add) {
     add('attribute', {

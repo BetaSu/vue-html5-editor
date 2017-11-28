@@ -273,14 +273,14 @@ const m = {
     let rows = Array.from(am.editZone().children)
     let result
     rows.forEach(row => {
-      if (row.contains(node)) {
+      if (row.contains(node) || row === node) {
         result = row
       }
     })
     return result
   },
   /*
-   * return all rows 
+   * return all rows
    **/
   getRows () {
     return Array.from(am.editZone().children)
@@ -340,7 +340,7 @@ const m = {
     }
   },
   /*
-   * get node's previous row which has content  
+   * get node's previous row which has content
    **/
   getPreviousRow (node) {
     let row = m.getRow(node)
@@ -358,6 +358,25 @@ const m = {
       }
     })
     return preRow
+  },
+  /*
+   * whether target row is empty
+   **/
+  rowIsEmpty (node) {
+    let row = m.isRow(node) ? node : m.getRow(node)
+    return row.innerHTML.replace(/<br>/g, '') === ''
+  },
+  /*
+   * try to collapse at target row
+   **/
+  collapseAtRow (node) {
+    let row = m.isRow(node) ? node : m.getRow(node)
+    let s = am.getSelection()
+    try {
+      s.collapse(row, 1)
+    } catch (e) {
+      s.collapse(row, 0)
+    }
   }
 }
 

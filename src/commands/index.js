@@ -358,7 +358,7 @@ const commands = {
           if (s.isCollapsed && (s.focusOffset === 0 || (s.baseNode !== node && s.focusOffset === 1))) {
             let rows = Array.from(quote.querySelector('[data-editor-quote-block]').children)
             rows.forEach((row, index) => {
-              
+
               // row and node has father-child relationship
               if ((row === node || row.contains(node) || node.contains(row)) && index === 0) {
 
@@ -417,8 +417,11 @@ const commands = {
     let row = rh.newRow({
       br: true
     })
-    afterWhich = rh.getRow(afterWhich || rh.range.commonAncestorContainer)
-    if (afterWhich && afterWhich !== rh.editZone()) {
+    let curRow = rh.getRow(rh.range.commonAncestorContainer)
+    
+    // insert todo after this row
+    afterWhich = rh.getRow(afterWhich)
+    if (afterWhich) {
       let targetIndex
       let startIndex
       let list = afterWhich.parentNode.childNodes
@@ -440,16 +443,20 @@ const commands = {
       afterWhich.parentNode.insertBefore(row, list[targetIndex])
       rh.getSelection().collapse(row, 0)
     } else {
-      afterWhich.appendChild(row, 0)
-      rh.getSelection().collapse(row, 0)
+      
+      // insert todo at current row if it is empty
+      if (rh.rowIsEmpty(curRow)) {
+        rh.collapseAtRow(curRow)
+        row = curRow
+      } else {
+        rh.range.commonAncestorContainer.appendChild(row, 0)
+        rh.getSelection().collapse(row, 0)
+      }
     }
     let todoId = rh.createRandomId('todo')
     commands['insertHTML'](rh, `<${constant.ROW_TAG} data-editor-todo=${todoId} contenteditable="false"><input type="checkbox"/><input type="text" placeholder="待办事项"></${constant.ROW_TAG}><br>`)
     document.querySelector(`[data-editor-todo='${todoId}'] input[type=text]`).focus()
-    if (row) {
-      let br = row.querySelector('br')
-      row.removeChild(br)
-    }
+    row.parentNode.removeChild(row)
     commands['initTodo'](rh, afterWhich)
   },
   // init todo logic
@@ -577,9 +584,12 @@ const commands = {
 
     // special treatment for ul>li, to let module inspect run
     if (row) {
-      let innerHTML = row.innerHTML
-      commands['insertHTML'](rh, '&#8203;')
-      row.innerHTML = innerHTML
+      // if ul and ol is bind into a module's tab, this should be change
+      if (!rh.editor.modulesMap['ul'].moduleInspectResult) {
+        let innerHTML = row.innerHTML
+        commands['insertHTML'](rh, '&#8203;')
+        row.innerHTML = innerHTML
+      }
       return
     }
   },
@@ -635,6 +645,12 @@ const commands = {
     }
 
     let row = rh.getRow(node)
+    
+    // node is edit zone
+    if (!row) {
+      e.preventDefault()
+      return
+    }
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
       let firstRow = rh.editZone().firstElementChild
 
@@ -655,6 +671,7 @@ const commands = {
         row.parentNode.removeChild(row)
         let input = preRow.querySelector('input[type="text"]')
         if (input) {
+          e.preventDefault()
           input.focus()
         }
         return
