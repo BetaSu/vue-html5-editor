@@ -8,7 +8,10 @@ export default {
     editor.execCommand('initTodo')
   },
   handler (rh) {
-    rh.editor.execCommand('todo', rh.range.commonAncestorContainer)
+    rh.editor.execCommand('todo', {
+      insertAfter: rh.range.commonAncestorContainer,
+      placeholder: '待办事项'
+    })
   },
   inspect (add) {
     add('attribute', {

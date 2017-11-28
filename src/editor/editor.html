@@ -17,6 +17,6 @@
     </div>
 
     <p class='content' :is="constantConfig.ROW_TAG" :spellcheck="spellcheck" ref="content" id="editor-content" :style="contentStyle" data-editor="content"
-         contenteditable :data-editor-placeholder="placeholder" v-drag-pic="handleDragPic">
+         contenteditable="plaintext-only" :data-editor-placeholder="placeholder" v-drag-pic="handleDragPic">
     </p>
 </div>

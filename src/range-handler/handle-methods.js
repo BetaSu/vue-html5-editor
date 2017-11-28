@@ -362,7 +362,7 @@ const m = {
   /*
    * whether target row is empty
    **/
-  rowIsEmpty (node) {
+  isEmptyRow (node) {
     let row = m.isRow(node) ? node : m.getRow(node)
     return row.innerHTML.replace(/<br>/g, '') === ''
   },

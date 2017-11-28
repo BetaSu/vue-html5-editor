@@ -236,11 +236,14 @@ export default {
       this.saveCurrentRange()
       this.styleInspect()
     }, false)
-    content.addEventListener('mouseout', (e) => {
+    content.addEventListener('mouseout', e => {
       if (e.target === content) {
         this.saveCurrentRange()
       }
     }, false)
+    content.addEventListener('paste', e => {
+      this.execCommand('paste', e, true)
+    })
     this.touchHandler = (e) => {
       if (content.contains(e.target)) {
         this.saveCurrentRange()

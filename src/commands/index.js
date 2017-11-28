@@ -1,5 +1,9 @@
 import insertImage from './insertImage'
 import fontSize from './fontSize'
+import paste from './paste'
+import enter from './enter'
+import keydown from './keydown'
+import deleteModule from './delete'
 import {isObj} from '../util'
 import constant from '../constant-config'
 
@@ -345,17 +349,9 @@ const commands = {
           }
         }
         if (e.keyCode === 8) {
-          // if (ctn.replace('\n', '') === '' &&
-          //   (node.parentNode === quote || node.parentNode.getAttribute('data-editor-quote-block'))) {
-          //   let newRow = rh.newRow({br: true})
-          //   quote.parentNode.replaceChild(newRow, quote)
-          //   rh.getSelection().collapse(newRow, 1)
-          //   console.log('8 1')
-          //   return
-          // }
 
           // cursor may at row or at quote block , so there are two judgement conditions
-          if (s.isCollapsed && (s.focusOffset === 0 || (s.baseNode !== node && s.focusOffset === 1))) {
+          if (s.isCollapsed && (s.focusOffset === 0 || (node.contains(s.baseNode) && (s.baseNode.innerText === '' || s.baseNode.nodeValue === '') && s.focusOffset === 1))) {
             let rows = Array.from(quote.querySelector('[data-editor-quote-block]').children)
             rows.forEach((row, index) => {
 
@@ -413,14 +409,19 @@ const commands = {
       }
     })
   },
-  'todo' (rh, afterWhich) {
+  'todo' (rh, data) {
     let row = rh.newRow({
       br: true
     })
     let curRow = rh.getRow(rh.range.commonAncestorContainer)
-    
+
     // insert todo after this row
-    afterWhich = rh.getRow(afterWhich)
+    let afterWhich = rh.getRow(data.insertAfter)
+
+    // is afterWhich is a empty row, just insert todo at current row
+    if (rh.isEmptyRow(afterWhich)) {
+      afterWhich = null
+    }
     if (afterWhich) {
       let targetIndex
       let startIndex
@@ -443,9 +444,9 @@ const commands = {
       afterWhich.parentNode.insertBefore(row, list[targetIndex])
       rh.getSelection().collapse(row, 0)
     } else {
-      
+
       // insert todo at current row if it is empty
-      if (rh.rowIsEmpty(curRow)) {
+      if (rh.isEmptyRow(curRow)) {
         rh.collapseAtRow(curRow)
         row = curRow
       } else {
@@ -454,13 +455,13 @@ const commands = {
       }
     }
     let todoId = rh.createRandomId('todo')
-    commands['insertHTML'](rh, `<${constant.ROW_TAG} data-editor-todo=${todoId} contenteditable="false"><input type="checkbox"/><input type="text" placeholder="待办事项"></${constant.ROW_TAG}><br>`)
+    commands['insertHTML'](rh, `<${constant.ROW_TAG} data-editor-todo=${todoId} contenteditable="false"><input type="checkbox"/><input type="text" placeholder="${data.placeholder}"></${constant.ROW_TAG}><br>`)
     document.querySelector(`[data-editor-todo='${todoId}'] input[type=text]`).focus()
     row.parentNode.removeChild(row)
-    commands['initTodo'](rh, afterWhich)
+    commands['initTodo'](rh, data)
   },
   // init todo logic
-  'initTodo' (rh, arg) {
+  'initTodo' (rh, data) {
     const checkboxs = document.querySelectorAll('[data-editor-todo]')
     checkboxs.forEach((c, index) => {
       const btn = c.querySelector('[type=checkbox]')
@@ -497,7 +498,10 @@ const commands = {
               e.preventDefault()
               return deleteTodo()
             }
-            commands['todo'](rh, c)
+            commands['todo'](rh, {
+              insertAfter: c,
+              placeholder: data.placeholder
+            })
           } else if (e.keyCode === 8) {
             if (ctn.value === '') {
               e.preventDefault()
@@ -626,88 +630,13 @@ const commands = {
       row.innerHTML = innerHTML
       return
     }
-  },
-  'delete' (rh, e) {
-    // restore first row
-    let node = rh.range.commonAncestorContainer
-    console.log('delete', node)
-    // cancel list when li is empty
-    if ((rh.findSpecialAncestor(node, 'li')) && rh.range.collapsed && rh.range.startOffset === 0) {
-      e.preventDefault()
-      let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
-      if (ulOrOl.nodeName === 'UL') {
-        commands['insertUnorderedList'](rh, e)
-      }
-      if (ulOrOl.nodeName === 'OL') {
-        commands['insertOrderedList'](rh, e)
-      }
-      return
-    }
-
-    let row = rh.getRow(node)
-    
-    // node is edit zone
-    if (!row) {
-      return
-    }
-    if (rh.range.collapsed && (rh.range.startOffset === 0 || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
-      let firstRow = rh.editZone().firstElementChild
-
-      // first row cancel indent
-      if (firstRow === row) {
-        firstRow.style[constant.INDENT_STYLE_NAME] = ''
-        e.preventDefault()
-      }
-    }
-
-    // empty row
-    if (row.innerHTML.replace(/<br>/g, '') === '') {
-      // get previous row with content
-      let preRow = rh.getPreviousRow(row)
-
-      // cursor focus on previous row's input if previous row is todo
-      if (preRow && preRow.dataset && preRow.dataset.editorTodo) {
-        row.parentNode.removeChild(row)
-        let input = preRow.querySelector('input[type="text"]')
-        if (input) {
-          e.preventDefault()
-          input.focus()
-        }
-        return
-      }
-    }
-  },
-  'enter' (rh, e) {
-    console.log('enter')
-    if (rh.range.collapsed) {
-      let node = rh.range.commonAncestorContainer
-
-      // rewrite li enter logic
-      if (rh.findSpecialAncestor(node, 'li') && node.innerText && node.innerText.replace(/\n/g, '') === '') {
-        e.preventDefault()
-        let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
-        if (ulOrOl.nodeName === 'UL') {
-          commands['insertUnorderedList'](rh, e)
-        }
-        if (ulOrOl.nodeName === 'OL') {
-          commands['insertOrderedList'](rh, e)
-        }
-      }
-    }
-  },
-  'keydown' (rh, e) {
-    let node = rh.range.commonAncestorContainer
-
-    // to keep text wrap by a row
-    if (node.nodeType === Node.TEXT_NODE && node.parentNode === rh.editZone()) {
-      let row = rh.newRow()
-      row.innerText = node.nodeValue
-      node.parentNode.replaceChild(row, node)
-      return
-    }
   }
 }
 commands.insertImage = insertImage
 commands.fontSize = fontSize
+commands.delete = deleteModule
+commands.paste = paste
+commands.enter = enter
+commands.keydown = keydown
 
 export default commands
