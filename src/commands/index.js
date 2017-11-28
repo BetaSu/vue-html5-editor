@@ -648,7 +648,6 @@ const commands = {
     
     // node is edit zone
     if (!row) {
-      e.preventDefault()
       return
     }
     if (rh.range.collapsed && (rh.range.startOffset === 0 || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
