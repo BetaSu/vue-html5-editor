@@ -27,7 +27,7 @@ export default function (rh, e) {
 
   // handle &#8203;
   if (node.nodeType === Node.TEXT_NODE && range.collapsed) {
-    let endOffset = range.endOffset - 1
+    let endOffset = range.endOffset - 1 >= 0 ? range.endOffset - 1 : 0
     if (node.nodeValue !== undefined && node.nodeValue[endOffset].match(/\u200B/)) {
       let s = rh.getSelection()
       const range = document.createRange()

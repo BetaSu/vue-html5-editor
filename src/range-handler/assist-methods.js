@@ -76,7 +76,10 @@ const methods = {
   },
   getRange () {
     let s = methods.getSelection()
-    return s.getRangeAt(0)
+    if (s.rangeCount) {
+      return s.getRangeAt(0) 
+    }
+    return 
   }
 }
 

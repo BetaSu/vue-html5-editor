@@ -1,6 +1,7 @@
 import commands from './index'
 
 export default function (rh, arg) {
+  console.log('inin')
   let s = rh.getSelection()
   if (!s.isCollapsed) {
     document.execCommand('underline', false, arg)
@@ -17,6 +18,13 @@ export default function (rh, arg) {
 
       // cursor is at end of text, create a new node without style
       if (node.length === focusOffset) {
+        
+        // cursor is at a empty underline tag, remove it
+        if (rh.isEmptyNode(node)) {
+          node.parentNode.removeChild(node)
+          commands.insertHTML(rh, '&#8203;')
+          return
+        }
         document.execCommand('underline', false, arg)
         commands.insertHTML(rh, '&#8203;')
         return

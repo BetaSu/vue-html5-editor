@@ -209,7 +209,7 @@ const m = {
   /*
    * find an ancestor element through style name and style value
    * @param style {obj} styleName: styleValue
-   * @return  
+   * @return
    **/
   findSpecialAncestorByStyle (node, style, firstOne = true, border) {
     let result
@@ -392,6 +392,14 @@ const m = {
   isEmptyRow (node) {
     let row = m.isRow(node) ? node : m.getRow(node)
     return row.innerHTML.replace(/<br>/g, '') === ''
+  },
+  /*
+   * whether target node is empty
+   **/
+  isEmptyNode (node) {
+    let ctn = node.innerText || node.nodeValue
+    if (typeof ctn !== 'string') return
+    return ctn.replace('\n', '').replace(/\u200B/g, '') === ''
   },
   /*
    * try to collapse at target row

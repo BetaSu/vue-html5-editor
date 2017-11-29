@@ -113,6 +113,7 @@ export default {
       this.$emit('change', this.$refs.content.innerHTML)
     },
     saveCurrentRange(){
+      console.log('save')
       const selection = window.getSelection ? window.getSelection() : document.getSelection()
       if (!selection.rangeCount) {
         return
@@ -184,7 +185,6 @@ export default {
 
         // handle style inspect logic
         if (this.activeModules.length) {
-          console.log('inspect', this.activeModules)
           let excludeList = []
           this.modules.forEach(module => {
             module.moduleInspectResult = false
@@ -195,7 +195,6 @@ export default {
               let curModuleActiveItem = this.getCurActiveModuleItem()[moduleName]
               if (typeof curModuleActiveItem === 'string') {
                 module.moduleInspectResult = curModuleActiveItem || 'ALL'
-                console.log('moduleInspectResult', module.moduleInspectResult)
               }
             }
             excludeList = Array.from(new Set(excludeList))
@@ -227,13 +226,7 @@ export default {
     const toolbar = this.$refs.toolbar
     content.innerHTML = this.content
     content.addEventListener('mouseup', e => {
-      if (content.contains(e.target)) {
-
-        // to let collapse range run
-        setTimeout(() => {
-          this.saveCurrentRange()
-        }, 50)
-      }
+      this.saveCurrentRange()
       this.styleInspect()
     }, false)
     // toolbar.addEventListener('mousedown', this.saveCurrentRange, false)
@@ -243,9 +236,7 @@ export default {
       this.styleInspect()
     }, false)
     content.addEventListener('mouseout', e => {
-      if (e.target === content) {
-        this.saveCurrentRange()
-      }
+      this.saveCurrentRange()
     }, false)
     content.addEventListener('paste', e => {
       this.execCommand('paste', e, true)

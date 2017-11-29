@@ -1,17 +1,14 @@
 import commands from './index'
+import constant from '../constant-config'
 
 export default function (rh, e) {
+  console.log('keydown')
   let node = rh.range.commonAncestorContainer
   if (node.nodeType === Node.TEXT_NODE) {
 
     // to keep text wrap by a row
     if (node.parentNode === rh.editZone()) {
-      let row = rh.newRow()
-      let vContainer = rh.newRow()
-      vContainer.appendChild(row)
-      row.innerText = node.nodeValue
-      node.parentNode.removeChild(node)
-      commands.insertHTML(rh, row.outerHTML)
+      commands.formatBlock(rh, constant.ROW_TAG)
       return
     }
   }
