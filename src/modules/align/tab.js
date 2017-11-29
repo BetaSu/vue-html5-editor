@@ -29,6 +29,7 @@ export default {
       this.$parent.execCommand(this.choosed.type)
     },
     changeAlign () {
+      if (this.forbidden) return
       let pre_index = !isNaN(this.choosed.index) ? this.choosed.index : -1
       let len = Object.keys(this.alignMap).length
       let target_index

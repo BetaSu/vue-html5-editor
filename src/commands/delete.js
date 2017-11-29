@@ -5,7 +5,9 @@ export default function (rh, e) {
   // restore first row
   let node = rh.range.commonAncestorContainer
   let value = node.nodeValue || node.innerText
-  console.log('delete', node)
+  console.log('delete', node, e)
+  let range = rh.getRange() || rh.range
+
   // cancel list when li is empty
   if ((rh.findSpecialAncestor(node, 'li')) && rh.range.collapsed && rh.range.startOffset === 0) {
     e.preventDefault()
@@ -21,13 +23,20 @@ export default function (rh, e) {
   let row = rh.getRow(node)
 
   // node is edit zone
-  if (!row) {
-    return
-  }
+  if (!row) return
 
   // handle &#8203;
-  if (node.nodeType === Node.TEXT_NODE && node.nodeValue.replace(/\u200B/g, '') === '') {
-    node.nodeValue = ''
+  if (node.nodeType === Node.TEXT_NODE && range.collapsed) {
+    let endOffset = range.endOffset - 1
+    if (node.nodeValue !== undefined && node.nodeValue[endOffset].match(/\u200B/)) {
+      let s = rh.getSelection()
+      const range = document.createRange()
+      range.setStart(node, endOffset)
+      range.setEnd(node, endOffset + 1)
+      s.removeAllRanges()
+      s.addRange(range)
+      document.execCommand('forwardDelete', false)
+    }
     return
   }
 

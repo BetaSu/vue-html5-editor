@@ -3,6 +3,8 @@ import fontSize from './fontSize'
 import paste from './paste'
 import enter from './enter'
 import underline from './underline'
+import strikeThrough from './strikeThrough'
+import bold from './bold'
 import keydown from './keydown'
 import deleteModule from './delete'
 import {isObj} from '../util'
@@ -549,11 +551,12 @@ const commands = {
 
     // special treatment for ul>li, to let module inspect run
     if (row) {
+      
       // if ul and ol is bind into a module's tab, this should be change
       if (!rh.editor.modulesMap['ul'].moduleInspectResult) {
-        let innerHTML = row.innerHTML
-        commands['insertHTML'](rh, '&#8203;')
-        row.innerHTML = innerHTML
+        if (!row.innerHTML.match(/\u200B/g)) {
+          commands['insertHTML'](rh, '&#8203;')
+        }
       }
       return
     }
@@ -600,5 +603,7 @@ commands.paste = paste
 commands.enter = enter
 commands.keydown = keydown
 commands.underline = underline
+commands.strikeThrough = strikeThrough
+commands.bold = bold
 
 export default commands

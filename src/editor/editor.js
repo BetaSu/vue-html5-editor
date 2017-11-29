@@ -184,6 +184,7 @@ export default {
 
         // handle style inspect logic
         if (this.activeModules.length) {
+          console.log('inspect', this.activeModules)
           let excludeList = []
           this.modules.forEach(module => {
             module.moduleInspectResult = false
@@ -194,6 +195,7 @@ export default {
               let curModuleActiveItem = this.getCurActiveModuleItem()[moduleName]
               if (typeof curModuleActiveItem === 'string') {
                 module.moduleInspectResult = curModuleActiveItem || 'ALL'
+                console.log('moduleInspectResult', module.moduleInspectResult)
               }
             }
             excludeList = Array.from(new Set(excludeList))
@@ -226,8 +228,8 @@ export default {
     content.innerHTML = this.content
     content.addEventListener('mouseup', e => {
       if (content.contains(e.target)) {
-        
-        // to let collapse range run 
+
+        // to let collapse range run
         setTimeout(() => {
           this.saveCurrentRange()
         }, 50)
