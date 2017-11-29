@@ -206,6 +206,33 @@ const m = {
     }
     return result
   },
+  /*
+   * find an ancestor element through style name and style value
+   * @param style {obj} styleName: styleValue
+   * @return  
+   **/
+  findSpecialAncestorByStyle (node, style, firstOne = true, border) {
+    let result
+    let contentZone = am.editZone()
+    border = border || contentZone
+    while (node && (firstOne ? !result : true) && (node !== border)) {
+      if (!border || !border.contains(node)) return
+      let parent = node.parentNode
+      let isTarget = true
+      Object.keys(style).forEach(styleName => {
+        if (style[styleName] !== parent.style[styleName]) {
+          isTarget = false
+        }
+      })
+      if (isTarget) {
+        result = parent
+        node = parent
+      } else {
+        node = parent
+      }
+    }
+    return result
+  },
 
   getNodeNum (ancestor, nodeName) {
     return ancestor.querySelectorAll(nodeName).length

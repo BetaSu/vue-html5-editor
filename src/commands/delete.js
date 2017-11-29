@@ -4,6 +4,7 @@ import constant from '../constant-config'
 export default function (rh, e) {
   // restore first row
   let node = rh.range.commonAncestorContainer
+  let value = node.nodeValue || node.innerText
   console.log('delete', node)
   // cancel list when li is empty
   if ((rh.findSpecialAncestor(node, 'li')) && rh.range.collapsed && rh.range.startOffset === 0) {
@@ -17,21 +18,36 @@ export default function (rh, e) {
     }
     return
   }
-
   let row = rh.getRow(node)
 
   // node is edit zone
   if (!row) {
     return
   }
-  if (rh.range.collapsed && (rh.range.startOffset === 0 || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
+
+  // handle &#8203;
+  if (node.nodeType === Node.TEXT_NODE && node.nodeValue.replace(/\u200B/g, '') === '') {
+    node.nodeValue = ''
+    return
+  }
+
+  // empty row
+  if (rh.range.collapsed && ((node === row && rh.range.startOffset === 0) || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
     let firstRow = rh.editZone().firstElementChild
 
     // first row cancel indent
     if (firstRow === row) {
-      firstRow.style[constant.INDENT_STYLE_NAME] = ''
+      commands.outdent(rh, null)
       e.preventDefault()
+      return
     }
+  }
+
+  // row has content, cursor is at at start of the node, do outdent
+  if (rh.range.collapsed && value && rh.range.startOffset === 0 && (node === row.fistElementChild || node === row.firstChild)) {
+    commands.outdent(rh, null)
+    e.preventDefault()
+    return
   }
 
   // empty row

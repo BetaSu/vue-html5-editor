@@ -226,7 +226,11 @@ export default {
     content.innerHTML = this.content
     content.addEventListener('mouseup', e => {
       if (content.contains(e.target)) {
-        this.saveCurrentRange()
+        
+        // to let collapse range run 
+        setTimeout(() => {
+          this.saveCurrentRange()
+        }, 50)
       }
       this.styleInspect()
     }, false)

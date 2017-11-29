@@ -2,6 +2,7 @@ import insertImage from './insertImage'
 import fontSize from './fontSize'
 import paste from './paste'
 import enter from './enter'
+import underline from './underline'
 import keydown from './keydown'
 import deleteModule from './delete'
 import {isObj} from '../util'
@@ -519,46 +520,6 @@ const commands = {
       c.init = true
     })
   },
-  'underline' (rh, arg) {
-    document.execCommand('underline', false, arg)
-    // if (!rh.range.collapsed) {
-    //   document.execCommand('underline', false, arg)
-    // } else {
-    //   let text = rh.range.commonAncestorContainer
-    //   let node = text
-    //   if (text.nodeType === Node.TEXT_NODE) {
-    //     if (!text.parentNode.dataset || text.parentNode.dataset !== 'content') {
-    //       node = text.parentNode
-    //     }
-    //   }
-    //   console.log('find', rh.findSpecialAncestor(node, 'u'))
-    //   if (rh.findSpecialAncestor(node, 'u')) {
-    //     console.log(' in')
-    //     let ctn = text.nodeValue || text.innerText
-    //     // at the end of u
-    //     if (rh.getSelection().focusOffset === ctn.length) {
-    //       let span = document.createElement('span')
-    //       span.innerHTML = '&#8203;'
-    //       rh.insertAfter(span, node)
-    //       rh.getSelection().collapse(span, 1)
-    //       return
-    //     } else {
-    //       if (ctn.replace(/\u200B/g, '') === '') {
-    //         node.parentNode.removeChild(node)
-    //         return
-    //       }
-    //       console.log('middle')
-    //       return
-    //     }
-    //   }
-    //   let newUnderline = document.createElement('u')
-    //   newUnderline.innerHTML = '&#8203;'
-    //   if (text.parentNode) {
-    //     rh.insertAfter(newUnderline, text)
-    //     rh.getSelection().collapse(newUnderline, 1)
-    //   }
-    // }
-  },
   'insertUnorderedList' (rh, arg) {
     console.log('insertUnorderedList')
     // do not insert ul into a row
@@ -638,5 +599,6 @@ commands.delete = deleteModule
 commands.paste = paste
 commands.enter = enter
 commands.keydown = keydown
+commands.underline = underline
 
 export default commands
