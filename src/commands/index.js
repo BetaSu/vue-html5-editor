@@ -4,6 +4,7 @@ import paste from './paste'
 import enter from './enter'
 import underline from './underline'
 import strikeThrough from './strikeThrough'
+import italic from './italic'
 import bold from './bold'
 import quote from './quote'
 import todo from './todo'
@@ -187,6 +188,10 @@ const commands = {
     }
 
     nodeList.forEach(node => {
+      // cancel todo indent
+      if (node.getAttribute('data-editor-todo')) {
+        return
+      }
       doIndent(node.nodeName, node)
     })
 
@@ -342,6 +347,7 @@ commands.keydown = keydown
 commands.underline = underline
 commands.strikeThrough = strikeThrough
 commands.bold = bold
+commands.italic = italic
 Object.assign(commands, quote, todo, itodo)
 
 export default commands

@@ -412,6 +412,53 @@ const m = {
     } catch (e) {
       s.collapse(row, 0)
     }
+  },
+  /*
+   * searching nested ancestors till border to find the specified tagName
+   * @param {node} from which node
+   * @param {arr} includes tag names of target tag
+   * @param {node} search border
+   * @return {arr}
+   **/
+  findExistTagTillBorder (node, tagNamelist, border) {
+    let result = []
+    let contentZone = am.editZone()
+    border = border || contentZone
+    while (node && node !== border) {
+      if (!border || !border.contains(node)) return
+      let nodeName = node.nodeName
+      if (nodeName && tagNamelist.includes(nodeName)) {
+        if (!result.includes(nodeName)) {
+          result.push(nodeName)
+        }
+      }
+      node = node.parentNode
+    }
+    return result
+  },
+  /*
+   * return a nested DOM data through a tag name list
+   **/
+  createNestDOMThroughList (list) {
+    let deepestId = am.createRandomId('deepest')
+    let result = {
+      dom: null,
+      deepestId
+    }
+    list.forEach((tag, index) => {
+      let ele = document.createElement(tag)
+      if (!result.dom) {
+        result.dom = ele
+      } else {
+        result.dom.appendChild(ele)
+      }
+      if (index === list.length - 1) {
+        result.deepest = ele
+        ele.innerHTML = '&#8203;'
+        ele.id = deepestId
+      }
+    })
+    return result
   }
 }
 

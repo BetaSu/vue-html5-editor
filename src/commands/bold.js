@@ -6,32 +6,70 @@ export default function (rh, arg) {
     document.execCommand('bold', false, arg)
     return
   } else {
-    let node = rh.range.commonAncestorContainer
-    let underline = rh.findSpecialAncestor(node, 'strong') || rh.findSpecialAncestor(node, 'b') || rh.findSpecialAncestorByStyle(node, {
+    let node = s.focusNode
+    let row = rh.getRow(node)
+    let nodeCtn = node.innerText || node.nodeValue
+
+    // the outermost bold tag
+    let bold = rh.findSpecialAncestor(node, 'strong') || rh.findSpecialAncestor(node, 'b') || rh.findSpecialAncestorByStyle(node, {
         'fontWeight': 'bold'
       })
 
-    // is in a strong
-    if (underline) {
+    // is in a bold
+    if (bold) {
       let focusOffset = s.focusOffset
 
-      // cursor is at end of text, create a new node without style
-      if (node.length === focusOffset) {
-        document.execCommand('bold', false, arg)
-        commands.insertHTML(rh, '&#8203;')
-        return
-      } else {
+      // cursor is at end of text
+      if (nodeCtn.length === focusOffset) {
 
+        // ex: row > b > text + strike  to  row > (b > text + strike) + font
+        let existStyle = rh.findExistTagTillBorder(node, ['STRIKE', 'I', 'U'], row)
+        let newText = document.createElement('font')
+        if (existStyle.length) {
+          let newDOM = rh.createNestDOMThroughList(existStyle)
+          rh.insertAfter(newDOM.dom, bold)
+          s.collapse(newDOM.deepest, 1)
+        } else {
+          newText.innerHTML = '&#8203;'
+          rh.insertAfter(newText, bold)
+          s.collapse(newText, 1)
+        }
+        return
+
+      } else {
         // cursor is not at end of text, remove style
-        rh.setRangeAt(underline, true)
+        rh.setRangeAt(bold, true)
         document.execCommand('bold', false, arg)
         s.collapse(node, focusOffset)
         return
       }
     } else {
+      let node = s.focusNode.nodeType === Node.TEXT_NODE ? s.focusNode.parentNode : s.focusNode
 
-      // cursor is not surrounded by a strong tag, create empty strong tag
-      commands.insertHTML(rh, '<strong>&#8203;</strong>')
+      // is in another style tag, create b inside current tag
+      if (rh.isInlineElement(node) && rh.isEmptyNode(node)) {
+        let newU = document.createElement('b')
+        newU.innerHTML = '&#8203;'
+        node.appendChild(newU)
+        s.collapse(newU, 1)
+        return
+      } else {
+        // at middle of another style tag
+        let existStyle = rh.findExistTagTillBorder(node, ['STRIKE', 'I', 'U'], row)
+        existStyle.push('B')
+        if (existStyle.length) {
+          let newDOM = rh.createNestDOMThroughList(existStyle)
+          let v = rh.newRow()
+          v.appendChild(newDOM.dom)
+          commands.insertHTML(rh, v.innerHTML)
+          let deepestNode = document.getElementById(newDOM.deepestId)
+          s.collapse(deepestNode, 1)
+          return
+        }
+      }
+
+      // cursor is not surrounded by a bold tag, create empty bold tag
+      commands.insertHTML(rh, '<b>&#8203;</b>')
     }
   }
 }

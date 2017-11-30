@@ -2,7 +2,6 @@ import commands from './index'
 import constant from '../constant-config'
 
 export default function (rh, e) {
-  console.log('keydown')
   let node = rh.range.commonAncestorContainer
   if (node.nodeType === Node.TEXT_NODE) {
 

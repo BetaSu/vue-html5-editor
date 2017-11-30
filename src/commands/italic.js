@@ -3,60 +3,60 @@ import commands from './index'
 export default function (rh, arg) {
   let s = rh.getSelection()
   if (!s.isCollapsed) {
-    document.execCommand('underline', false, arg)
+    document.execCommand('italic', false, arg)
     return
   } else {
     let node = s.focusNode
     let row = rh.getRow(node)
     let nodeCtn = node.innerText || node.nodeValue
 
-    // the outermost underline tag
-    let underline = rh.findSpecialAncestor(node, 'u', false, row) || rh.findSpecialAncestorByStyle(node, {
-      'textDecorationLine': 'underline'
+    // the outermost italic tag
+    let italic = rh.findSpecialAncestor(node, 'i', false, row) || rh.findSpecialAncestorByStyle(node, {
+        'fontStyle': 'italic'
       }, false, row)
 
-    // is in a underline
-    if (underline) {
+    // is in a italic
+    if (italic) {
       let focusOffset = s.focusOffset
 
       // cursor is at end of text
       if (nodeCtn.length === focusOffset) {
 
-        // ex: row > u > text + strike  to  row > (u > text + strike) + font
-        let existStyle = rh.findExistTagTillBorder(node, ['STRIKE', 'I', 'B', 'STRONG'], row)
+        // ex: row > i > text + strike  to  row > (i > text + strike) + font
+        let existStyle = rh.findExistTagTillBorder(node, ['STRIKE', 'U', 'B', 'STRONG'], row)
         let newText = document.createElement('font')
         if (existStyle.length) {
           let newDOM = rh.createNestDOMThroughList(existStyle)
-          rh.insertAfter(newDOM.dom, underline)
+          rh.insertAfter(newDOM.dom, italic)
           s.collapse(newDOM.deepest, 1)
         } else {
           newText.innerHTML = '&#8203;'
-          rh.insertAfter(newText, underline)
+          rh.insertAfter(newText, italic)
           s.collapse(newText, 1)
         }
         return
 
       } else {
         // cursor is not at end of text, remove style
-        rh.setRangeAt(underline, true)
-        document.execCommand('underline', false, arg)
+        rh.setRangeAt(italic, true)
+        document.execCommand('italic', false, arg)
         s.collapse(node, focusOffset)
         return
       }
     } else {
       let node = s.focusNode.nodeType === Node.TEXT_NODE ? s.focusNode.parentNode : s.focusNode
 
-      // is in another style tag, create u inside current tag
+      // is in another style tag, create i inside current tag
       if (rh.isInlineElement(node) && rh.isEmptyNode(node)) {
-        let newU = document.createElement('u')
+        let newU = document.createElement('i')
         newU.innerHTML = '&#8203;'
         node.appendChild(newU)
         s.collapse(newU, 1)
         return
       } else {
         // at middle of another style tag
-        let existStyle = rh.findExistTagTillBorder(node, ['STRIKE', 'I', 'B', 'STRONG'], row)
-        existStyle.push('U')
+        let existStyle = rh.findExistTagTillBorder(node, ['STRIKE', 'U', 'B', 'STRONG'], row)
+        existStyle.push('I')
         if (existStyle.length) {
           let newDOM = rh.createNestDOMThroughList(existStyle)
           let v = rh.newRow()
@@ -68,8 +68,9 @@ export default function (rh, arg) {
         }
       }
 
-      // cursor is not surrounded by a underline tag, create empty underline tag
-      commands.insertHTML(rh, '<u>&#8203;</u>')
+      // cursor is not surrounded by a italic tag, create empty italic tag
+      commands.insertHTML(rh, '<i>&#8203;</i>')
     }
   }
 }
+

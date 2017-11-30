@@ -113,7 +113,6 @@ export default {
       this.$emit('change', this.$refs.content.innerHTML)
     },
     saveCurrentRange(){
-      console.log('save')
       const selection = window.getSelection ? window.getSelection() : document.getSelection()
       if (!selection.rangeCount) {
         return
