@@ -440,22 +440,24 @@ const m = {
    * return a nested DOM data through a tag name list
    **/
   createNestDOMThroughList (list) {
-    let deepestId = am.createRandomId('deepest')
     let result = {
       dom: null,
-      deepestId
+      deepestId: null,
+      deepest: null
     }
     list.forEach((tag, index) => {
       let ele = document.createElement(tag)
-      if (!result.dom) {
-        result.dom = ele
-      } else {
-        result.dom.appendChild(ele)
+      result[index] = ele
+      let parent = result[index - 1]
+      if (parent) {
+        parent.appendChild(ele)
       }
       if (index === list.length - 1) {
         result.deepest = ele
+        result.deepestId = am.createRandomId('deepest')
+        result.dom = result['0']
+        ele.id = result.deepestId
         ele.innerHTML = '&#8203;'
-        ele.id = deepestId
       }
     })
     return result
