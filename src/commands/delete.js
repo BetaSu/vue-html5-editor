@@ -32,6 +32,7 @@ export default function (rh, e) {
     while (node.nodeValue !== undefined && node.nodeValue[startOffset] && node.nodeValue[startOffset].match(/\u200B/)) {
       startOffset--
     }
+    if (startOffset === endOffset) return afterDelete(rh)
     let s = rh.getSelection()
     const newRange = document.createRange()
     newRange.setStart(node, startOffset + 1)
@@ -101,6 +102,13 @@ function afterDelete(rh) {
           document.execCommand('forwardDelete', false)
         } catch (e) {}
       }
+    }
+    
+    // if edit zone is empty, create a row
+    if (rh.isEmptyNode(rh.editZone()) && !rh.getRows().length) {
+      let row = rh.newRow({br: true})
+      rh.editZone().appendChild(row)
+      rh.getSelection().collapse(row, 1)
     }
   })
 }

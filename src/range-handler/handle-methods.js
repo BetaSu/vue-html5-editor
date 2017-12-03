@@ -14,7 +14,7 @@ const m = {
     })
   },
   /**
-   * func find all the descendant text nodes of a element
+   * find all the descendant text nodes of a element
    * @param ancestor
    */
   getDescendantTextNodes (ancestor) {
@@ -391,13 +391,13 @@ const m = {
    **/
   isEmptyRow (node) {
     let row = m.isRow(node) ? node : m.getRow(node)
-    return row.innerHTML.replace(/<br>/g, '') === ''
+    return row.innerText.replace('\n', '').replace(/\u200B/g, '') === ''
   },
   /*
    * whether target node is empty
    **/
   isEmptyNode (node) {
-    let ctn = node.innerText || node.nodeValue
+    let ctn = typeof node.innerText === 'string' ? node.innerText : node.nodeValue
     if (typeof ctn !== 'string') return
     return ctn.replace('\n', '').replace(/\u200B/g, '') === ''
   },

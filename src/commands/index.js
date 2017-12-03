@@ -296,9 +296,7 @@ const commands = {
 
       // if ul and ol is bind into a module's tab, this should be change
       if (!rh.editor.modulesMap['ul'].moduleInspectResult) {
-        if (!row.innerHTML.match(/\u200B/g)) {
-          commands['insertHTML'](rh, '&#8203;')
-        }
+        commands['insertHTML'](rh, '&#8203;')
       }
       return
     }
@@ -329,12 +327,11 @@ const commands = {
       }
     }
 
-    // special treatment for ul>li, to let module inspect run
+    // special treatment for ol>li, to let module inspect run
     if (row) {
-      let innerHTML = row.innerHTML
-      commands['insertHTML'](rh, '&#8203;')
-      row.innerHTML = innerHTML
-      return
+      if (!rh.editor.modulesMap['ol'].moduleInspectResult) {
+        commands['insertHTML'](rh, '&#8203;')
+      }
     }
   }
 }

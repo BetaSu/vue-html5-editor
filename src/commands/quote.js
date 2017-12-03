@@ -32,6 +32,12 @@ const q = {
             rh.insertAfter(qr, quoteRows[index - 1])
           }
         })
+        const range = document.createRange()
+        range.setStart(quoteRows[0], 0)
+        range.setEnd(quoteRows[quoteRows.length - 1], 1)
+        let s = rh.getSelection()
+        s.removeAllRanges()
+        s.addRange(range)
       }
       return
     }
@@ -39,14 +45,16 @@ const q = {
     let curRow = rh.getRow(node)
 
     // is at a empty row without row element, then create a row
-    if (!curRow) {
+    // or texts has no common parent row
+    if (!curRow && !texts.length) {
       let v = rh.newRow()
       let newRow = rh.newRow({br: true})
       v.appendChild(newRow)
       commands.insertHTML(rh, newRow.outerHTML)
       let s = rh.getSelection()
       texts.push(s.focusNode)
-    } else if (!texts.length) {
+    }
+    if (!texts.length) {
       texts.push(curRow)
     }
 
@@ -61,6 +69,12 @@ const q = {
     let quoteRows = []
     texts.forEach((text, index) => {
       let curRow = rh.getRow(text)
+
+      // create a row for text without row
+      if (!curRow && text.nodeValue) {
+        curRow = rh.newRow({br: true})
+        curRow.appendChild(text)
+      }
       if (curRow && !quoteRows.includes(curRow)) {
         quoteRows.push(curRow)
       }
