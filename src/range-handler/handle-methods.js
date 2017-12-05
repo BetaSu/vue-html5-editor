@@ -207,6 +207,22 @@ const m = {
     return result
   },
   /*
+   * find target style
+   **/
+  findSpecialAncestorStyle (node, styleName, firstOne = true, border) {
+    let result
+    let contentZone = am.editZone()
+    border = border || contentZone
+    while (node && (firstOne ? !result : true) && (node !== border)) {
+      if (!border || !border.contains(node)) return
+      if (node.style && node.style[styleName]) {
+        result = node.style[styleName]
+      }
+      node = node.parentNode
+    }
+    return result
+  },
+  /*
    * find an ancestor element through style name and style value
    * @param style {obj} styleName: styleValue
    * @return

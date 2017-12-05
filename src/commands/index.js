@@ -163,17 +163,24 @@ const commands = {
     if (document.execCommand('insertHTML', false, arg)) {
       return
     }
-    // hack
-    const fragment = document.createDocumentFragment()
-    const div = document.createElement('div')
-    div.innerHTML = arg
-    if (div.hasChildNodes()) {
-      for (let i = 0; i < div.childNodes.length; i++) {
-        fragment.appendChild(div.childNodes[i].cloneNode(true))
+    commands['forceInsertHTML'](rh, arg)
+  },
+  /*
+   * insertHTML would insert DOM as row's child
+   * forceInsertHTML would insert DOM as anchorNode of range 
+   **/
+  'forceInsertHTML' (rh, arg) {
+    let v = rh.newRow()
+    let s = rh.getSelection()
+    v.innerHTML = arg
+    if (v.hasChildNodes()) {
+      for (let i = 0; i < v.childNodes.length; i++) {
+        let curNode = v.childNodes[i]
+        rh.range.deleteContents()
+        rh.range.insertNode(curNode)
+        s.collapse(curNode, 1)
       }
     }
-    rh.range.deleteContents()
-    rh.range.insertNode(fragment)
     return
   },
   'indent' (rh, arg) {

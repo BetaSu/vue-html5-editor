@@ -153,12 +153,12 @@ export default {
         module.handler(new RH(this.range, this), module)
         this.$nextTick(() => {
           this.saveCurrentRange()
-          this.styleInspect()
+          this.moduleInspect()
         })
         return
       }
     },
-    styleInspect () {
+    moduleInspect () {
       if (this.range) {
         this.clearActiveModuleItem()
         this.activeModules = []
@@ -182,6 +182,11 @@ export default {
         let attributeResult = Inspector.removeDuplate(Inspector.run('attribute', textAftetDR))
         this.activeModules = Array.from(new Set(tagResult.concat(styleResult, attributeResult)))
 
+        this.modules.forEach(module => {
+          module.forbidden = false
+          module.moduleInspectResult = false
+        })
+
         // handle style inspect logic
         if (this.activeModules.length) {
           let excludeList = []
@@ -204,11 +209,6 @@ export default {
               }
             })
           })
-        } else {
-          this.modules.forEach(module => {
-            module.forbidden = false
-            module.moduleInspectResult = false
-          })
         }
       }
     }
@@ -226,13 +226,13 @@ export default {
     content.innerHTML = this.content
     content.addEventListener('mouseup', e => {
       this.saveCurrentRange()
-      this.styleInspect()
+      this.moduleInspect()
     }, false)
     // toolbar.addEventListener('mousedown', this.saveCurrentRange, false)
     content.addEventListener('keyup', e => {
       this.$emit('change', content.innerHTML)
       this.saveCurrentRange()
-      this.styleInspect()
+      this.moduleInspect()
     }, false)
     content.addEventListener('mouseout', e => {
       this.saveCurrentRange()
@@ -243,7 +243,7 @@ export default {
     this.touchHandler = (e) => {
       if (content.contains(e.target)) {
         this.saveCurrentRange()
-        this.styleInspect()
+        this.moduleInspect()
       }
     }
     window.addEventListener('touchend', this.touchHandler, false)

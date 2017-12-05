@@ -3,13 +3,14 @@ import constant from '../constant-config'
 
 export default function (rh, e) {
   // restore first row
-  let node = rh.range.commonAncestorContainer
+  let s = rh.getSelection()
+  let node = s.baseNode
   let value = node.nodeValue || node.innerText
   console.log('delete', node, e)
   let curRange = rh.getRange() || rh.range
 
   // cancel list when li is empty
-  if ((rh.findSpecialAncestor(node, 'li')) && rh.range.collapsed && rh.range.startOffset === 0) {
+  if ((rh.findSpecialAncestor(node, 'li')) && rh.range.startOffset === 0) {
     e.preventDefault()
     let ulOrOl = rh.findSpecialAncestor(node, 'ul') || rh.findSpecialAncestor(node, 'ol')
     if (ulOrOl.nodeName === 'UL') {
