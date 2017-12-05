@@ -32,12 +32,14 @@ const q = {
             rh.insertAfter(qr, quoteRows[index - 1])
           }
         })
-        const range = document.createRange()
-        range.setStart(quoteRows[0], 0)
-        range.setEnd(quoteRows[quoteRows.length - 1], 1)
-        let s = rh.getSelection()
-        s.removeAllRanges()
-        s.addRange(range)
+        if (quoteRows.length) {
+          const range = document.createRange()
+          range.setStart(quoteRows[0], 0)
+          range.setEnd(quoteRows[quoteRows.length - 1], 1)
+          let s = rh.getSelection()
+          s.removeAllRanges()
+          s.addRange(range)
+        }
       }
       return
     }
@@ -118,7 +120,9 @@ const q = {
               })
               rh.insertAfter(sibling, quote)
             }
-            node.parentNode.removeChild(node)
+            if (node.parentNode.children.length > 1) {
+              node.parentNode.removeChild(node)
+            }
             rh.getSelection().collapse(sibling, 0)
           }
         }

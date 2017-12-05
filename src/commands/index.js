@@ -270,6 +270,7 @@ const commands = {
     document.execCommand('insertUnorderedList', false, null)
     let startNode = rh.getSelection().anchorNode
     let row = rh.getRow(startNode)
+    let s = rh.getSelection()
 
     // startNode is edit zone
     if (!row) return
@@ -295,7 +296,7 @@ const commands = {
     if (row) {
 
       // if ul and ol is bind into a module's tab, this should be change
-      if (!rh.editor.modulesMap['ul'].moduleInspectResult) {
+      if (s.isCollapsed && !rh.editor.modulesMap['ul'].moduleInspectResult) {
         commands['insertHTML'](rh, '&#8203;')
       }
       return
@@ -304,6 +305,7 @@ const commands = {
   'insertOrderedList' (rh, arg) {
     // do not insert ul into a row
     document.execCommand('insertOrderedList', false, null)
+    let s = rh.getSelection()
     let startNode = rh.getSelection().anchorNode
     let row = rh.getRow(startNode)
 
@@ -329,7 +331,7 @@ const commands = {
 
     // special treatment for ol>li, to let module inspect run
     if (row) {
-      if (!rh.editor.modulesMap['ol'].moduleInspectResult) {
+      if (s.isCollapsed && !rh.editor.modulesMap['ol'].moduleInspectResult) {
         commands['insertHTML'](rh, '&#8203;')
       }
     }

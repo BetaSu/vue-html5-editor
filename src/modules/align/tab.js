@@ -3,7 +3,13 @@ export default {
   template,
   watch: {
     activeItem (n) {
-      // do module inspect logic here
+      n = n || 'left'
+      let map = {
+        'left': 2,
+        'center': 0,
+        'right': 1
+      }
+      this.setAlign(map[n])
     }
   },
   data () {
@@ -11,7 +17,6 @@ export default {
       alignMap: {
         '居中': 'justifyCenter',
         '居右': 'justifyRight',
-        '左右': 'justify',
         '居左': 'justifyLeft'
       },
       choosed: {}

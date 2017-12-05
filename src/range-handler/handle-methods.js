@@ -391,6 +391,11 @@ const m = {
    **/
   isEmptyRow (node) {
     let row = m.isRow(node) ? node : m.getRow(node)
+    if (row.getAttribute) {
+      if (typeof row.getAttribute('data-editor-todo') === 'string' || typeof row.getAttribute('data-editor-quote') === 'string') {
+        return false
+      }
+    }
     return row.innerText.replace('\n', '').replace(/\u200B/g, '') === ''
   },
   /*
