@@ -6,7 +6,7 @@ export default function (rh, e) {
   let s = rh.getSelection()
   let node = s.baseNode
   let value = node.nodeValue || node.innerText
-  console.log('delete', node, e)
+  // console.log('delete', node, e)
   let curRange = rh.getRange() || rh.range
 
   // cancel list when li is empty
@@ -28,26 +28,7 @@ export default function (rh, e) {
     e.preventDefault()
     return afterDelete(rh)
   }
-
-  // handle &#8203;&#8203;&#8203; in node
-  if (node.nodeType === Node.TEXT_NODE && curRange.collapsed) {
-    let endOffset = curRange.endOffset - 1 >= 0 ? curRange.endOffset - 1 : 0
-    let startOffset = endOffset
-    while (node.nodeValue !== undefined && node.nodeValue[startOffset] && node.nodeValue[startOffset].match(/\u200B/)) {
-      startOffset--
-    }
-    if (startOffset !== endOffset) {
-      let s = rh.getSelection()
-      const newRange = document.createRange()
-      newRange.setStart(node, startOffset + 1)
-      newRange.setEnd(node, endOffset + 1)
-      s.removeAllRanges()
-      s.addRange(newRange)
-      document.execCommand('forwardDelete', false)
-      return
-    }
-  }
-
+  
   // empty row
   if (rh.range.collapsed && ((node === row && rh.range.startOffset === 0) || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
     let firstRow = rh.editZone().firstElementChild
@@ -88,7 +69,7 @@ export default function (rh, e) {
   return afterDelete(rh)
 }
 
-// handle more &#8203; after delete
+// handle &#8203; after delete
 function afterDelete(rh) {
   let deleteInterval = window.setInterval(function () {
     let s = rh.getSelection()

@@ -1,7 +1,6 @@
 import commands from './index'
 
 export default function (rh, arg) {
-  // through font tag
   if (rh.range.collapsed) {
     let node = rh.range.commonAncestorContainer
     let row = rh.getRow(node)
