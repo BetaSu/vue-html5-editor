@@ -261,6 +261,15 @@ export default {
     }, false)
     content.addEventListener('paste', e => {
       this.execCommand('paste', e, true)
+      let common = this.range.commonAncestorContainer
+      if (common) {
+        if (common.nodeType === Node.TEXT_NODE) {
+          common = common.parentNode
+        }
+        if (common.scrollIntoView) {
+          common.scrollIntoView(false)
+        }
+      }
     })
     this.touchHandler = (e) => {
       if (content.contains(e.target)) {

@@ -120,17 +120,13 @@ const q = {
         if (e.keyCode === 13) {
           if (ctn.replace('\n', '') === '') {
             e.preventDefault()
-            let sibling = quote.nextSibling
-            if (!sibling || sibling.innerHTML === '') {
-              sibling = rh.newRow({
-                br: true
-              })
-              rh.insertAfter(sibling, quote)
-            }
+            let newRow = rh.newRow({br: true})
+            rh.insertAfter(newRow, quote)
             if (node.parentNode.children.length > 1) {
               node.parentNode.removeChild(node)
             }
-            rh.getSelection().collapse(sibling, 0)
+            rh.getSelection().collapse(newRow, 0)
+            return
           }
         }
         if (e.keyCode === 8) {

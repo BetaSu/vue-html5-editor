@@ -323,6 +323,18 @@ const m = {
     return result
   },
   /*
+   * get row, if there's not, create one
+   **/
+  forceGetRow (node) {
+    if (node.parentNode === am.editZone() && node.nodeType === Node.TEXT_NODE) {
+      let newRow = am.newRow()
+      newRow.innerText = node.nodeValue
+      node.parentNode.replaceChild(newRow, node)
+      node = newRow
+    }
+    return m.getRow(node)
+  },
+  /*
    * return all rows
    **/
   getRows () {
