@@ -74,7 +74,7 @@ const q = {
 
       // create a row for text without row
       if (!curRow && text.nodeValue) {
-        curRow = rh.newRow({br: true})
+        curRow = rh.newRow()
         curRow.appendChild(text)
       }
       if (curRow && !quoteRows.includes(curRow)) {
@@ -90,14 +90,16 @@ const q = {
       quoteBlock.appendChild(qr.cloneNode(true))
       anchorRow = qr
     })
-    // container.appendChild(quote)
-    // let aNode = rh.range.commonAncestorContainer
-    // // if range is not at edit zone, insertHTML would run fail
-    // if (aNode !== rh.editZone()) {
-    //   aNode.parentNode.removeChild(aNode)
-    // }
-    // commands['insertHTML'](rh, container.innerHTML)
-    anchorRow.parentNode.replaceChild(quote, anchorRow)
+
+    if (anchorRow.parentNode) {
+      anchorRow.parentNode.replaceChild(quote, anchorRow)
+    } else {
+      // current row is created and has no parent
+      let v = rh.newRow()
+      v.appendChild(quote)
+      rh.range.deleteContents()
+      commands['insertHTML'](rh, v.innerHTML)
+    }
     const curQuote = document.querySelector(`[data-editor-quote='${id}']`)
     if (!curQuote.lastElementChild) return
     rh.getSelection().collapse(curQuote.lastElementChild, curQuote.lastElementChild.innerText ? 1 : 0)
