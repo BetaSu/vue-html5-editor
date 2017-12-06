@@ -32,13 +32,18 @@ const q = {
             rh.insertAfter(qr, quoteRows[index - 1])
           }
         })
+        let s = rh.getSelection()
         if (quoteRows.length) {
           const range = document.createRange()
           range.setStart(quoteRows[0], 0)
           range.setEnd(quoteRows[quoteRows.length - 1], 1)
-          let s = rh.getSelection()
           s.removeAllRanges()
           s.addRange(range)
+        } else {
+          // it's a empty quote
+          let newRow = rh.newRow({br: true})
+          quote.parentNode.replaceChild(newRow, quote)
+          s.collapse(newRow, 1)
         }
       }
       return

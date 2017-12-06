@@ -164,14 +164,15 @@ export default {
         this.clearActiveModuleItem()
         this.activeModules = []
         this.allActiveModules = []
-        let texts = new RH(this.range, this).getAllTextNodesInRange()
+        let rh = new RH(this.range, this)
+        let texts = rh.getAllTextNodesInRange()
         if (texts.length === 0 && this.range.collapsed) {
           texts.push(this.range.commonAncestorContainer)
         }
         // texts duplicate removal
         let textAftetDR = []
         texts.forEach(text => {
-          if (text.nodeType === Node.TEXT_NODE) {
+          if (text.nodeType === Node.TEXT_NODE && text.parentNode !== rh.editZone()) {
             text = text.parentNode
           }
           if (!textAftetDR.includes(text)) {

@@ -10,6 +10,9 @@ import quote from './quote'
 import todo from './todo'
 import keydown from './keydown'
 import deleteModule from './delete'
+import justifyRight from './justifyRight'
+import justifyLeft from './justifyLeft'
+import justifyCenter from './justifyCenter'
 import {isObj} from '../util'
 import constant from '../constant-config'
 
@@ -354,6 +357,9 @@ commands.underline = underline
 commands.strikeThrough = strikeThrough
 commands.bold = bold
 commands.italic = italic
+commands.justifyLeft = justifyLeft
+commands.justifyCenter = justifyCenter
+commands.justifyRight = justifyRight
 Object.assign(commands, quote, todo, itodo)
 
 export default commands

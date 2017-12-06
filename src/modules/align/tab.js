@@ -4,12 +4,21 @@ export default {
   watch: {
     activeItem (n) {
       n = n || 'left'
+      console.log('nn', n)
       let map = {
         'left': 2,
         'center': 0,
         'right': 1
       }
-      this.setAlign(map[n])
+      let index = map[n]
+      let options = Object.keys(this.alignMap)
+      let key = options[index]
+      this.choosed = {
+        index,
+        key,
+        type: this.alignMap[key]
+      }
+      this.setAlign(index)
     }
   },
   data () {
@@ -26,12 +35,8 @@ export default {
     setAlign (index) {
       let options = Object.keys(this.alignMap)
       let key = options[index]
-      this.choosed = {
-        index,
-        key,
-        type: this.alignMap[key]
-      }
-      this.$parent.execCommand(this.choosed.type)
+      this.$parent.execCommand(this.alignMap[key])
+      this.$parent.moduleInspect()
     },
     changeAlign () {
       if (this.forbidden) return
