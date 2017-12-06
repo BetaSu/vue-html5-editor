@@ -4,7 +4,6 @@ export default {
   watch: {
     activeItem (n) {
       n = n || 'left'
-      console.log('nn', n)
       let map = {
         'left': 2,
         'center': 0,
@@ -36,6 +35,7 @@ export default {
       let options = Object.keys(this.alignMap)
       let key = options[index]
       this.$parent.execCommand(this.alignMap[key])
+      this.$parent.saveCurrentRange()
       this.$parent.moduleInspect()
     },
     changeAlign () {
