@@ -322,16 +322,16 @@ const m = {
     })
     return result
   },
+  textToRow (node) {
+    if (node.parentNode === am.editZone() && node.nodeType === Node.TEXT_NODE) {
+      document.execCommand('formatBlock', false, constant.ROW_TAG_UPPERCASE)
+    }
+  },
   /*
    * get row, if there's not, create one
    **/
   forceGetRow (node) {
-    if (node.parentNode === am.editZone() && node.nodeType === Node.TEXT_NODE) {
-      let newRow = am.newRow()
-      newRow.innerText = node.nodeValue
-      node.parentNode.replaceChild(newRow, node)
-      node = newRow
-    }
+    node = m.textToRow(node)
     return m.getRow(node)
   },
   /*

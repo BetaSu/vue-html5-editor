@@ -31,7 +31,6 @@ export default function (rh, arg) {
       } else {
         v.appendChild(newDOM.dom)
       }
-      console.log('fontSize', fontSize)
       commands.insertHTML(rh, v.innerHTML)
       let deepestNode = document.getElementById(newDOM.deepestId)
       s.collapse(deepestNode, 1)

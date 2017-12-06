@@ -279,6 +279,21 @@ export default {
     }
     window.addEventListener('touchend', this.touchHandler, false)
 
+    // before exec command
+    // let text be a row
+    RH.prototype.before((command,  rh, arg) => {
+      let texts = rh.getAllTextNodesInRange()
+      texts.forEach(text => {
+        if (!rh.isEmptyNode(text)) {
+          rh.textToRow(text)
+        }
+      })
+      if (texts.length) {
+        rh.editor.saveCurrentRange()
+      }
+      // rh.textToRow(node)
+    })
+
     // handle shortcut
     content.addEventListener('keydown', e => {
       this.execCommand('keydown', e, true)
