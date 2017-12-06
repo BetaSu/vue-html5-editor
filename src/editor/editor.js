@@ -35,6 +35,7 @@ export default {
     return {
       modules: {},
       activeModules: [],
+      allActiveModules: [],
       fullScreen: false
     }
   },
@@ -162,6 +163,7 @@ export default {
       if (this.range) {
         this.clearActiveModuleItem()
         this.activeModules = []
+        this.allActiveModules = []
         let texts = new RH(this.range, this).getAllTextNodesInRange()
         if (texts.length === 0 && this.range.collapsed) {
           texts.push(this.range.commonAncestorContainer)
@@ -177,37 +179,56 @@ export default {
           }
         })
 
-        let tagResult = Inspector.removeDuplate(Inspector.run('tag', textAftetDR))
-        let styleResult = Inspector.removeDuplate(Inspector.run('style', textAftetDR))
-        let attributeResult = Inspector.removeDuplate(Inspector.run('attribute', textAftetDR))
-        this.activeModules = Array.from(new Set(tagResult.concat(styleResult, attributeResult)))
+        let tagResult = Inspector.run('tag', textAftetDR)
+        let tagResultRD = Inspector.removeDuplate(tagResult)
 
+        let styleResult = Inspector.run('style', textAftetDR)
+        let styleResultRD = Inspector.removeDuplate(styleResult)
+
+        let attributeResult = Inspector.run('attribute', textAftetDR)
+        let attributeResultRD = Inspector.removeDuplate(attributeResult)
+
+        this.allActiveModules = tagResult.concat(styleResult, attributeResult)
+        this.activeModules = Array.from(new Set(tagResultRD.concat(styleResultRD, attributeResultRD)))
+
+        // reset
         this.modules.forEach(module => {
           module.forbidden = false
           module.moduleInspectResult = false
         })
 
-        // handle style inspect logic
-        if (this.activeModules.length) {
+        // handle forbidden logic
+        if (this.allActiveModules.length) {
           let excludeList = []
+          this.allActiveModules.forEach(m => {
+            if (Array.isArray(m)) {
+              m.forEach(moduleName => {
+                let curModule = this.modulesMap[moduleName]
+                excludeList = excludeList.concat(curModule.exclude)
+              })
+            }
+          })
+          excludeList = Array.from(new Set(excludeList))
+          excludeList.forEach(exc => {
+            let excModule = this.modulesMap[exc]
+            if (excModule && excModule.type !== 'fn') {
+              excModule.forbidden = true
+            }
+          })
+        }
+
+        // handle highlight logic
+        if (this.activeModules.length) {
           this.modules.forEach(module => {
             module.moduleInspectResult = false
             let moduleName = module.name
             if (this.activeModules.includes(moduleName)) {
               module.moduleInspectResult = true
-              excludeList = excludeList.concat(module.exclude)
               let curModuleActiveItem = this.getCurActiveModuleItem()[moduleName]
               if (typeof curModuleActiveItem === 'string') {
                 module.moduleInspectResult = curModuleActiveItem || 'ALL'
               }
             }
-            excludeList = Array.from(new Set(excludeList))
-            excludeList.forEach(exc => {
-              let excModule = this.modulesMap[exc]
-              if (excModule && excModule.type !== 'fn') {
-                excModule.forbidden = true
-              }
-            })
           })
         }
       }
