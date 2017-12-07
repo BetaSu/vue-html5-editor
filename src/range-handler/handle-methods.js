@@ -326,6 +326,7 @@ const m = {
     if (node.parentNode === am.editZone() && node.nodeType === Node.TEXT_NODE) {
       document.execCommand('formatBlock', false, constant.ROW_TAG_UPPERCASE)
     }
+    return node
   },
   /*
    * get row, if there's not, create one
