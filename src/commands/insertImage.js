@@ -79,7 +79,6 @@ const insertImage = function (rh, arg) {
         rh.getSelection().collapse(newRow, 1)
       }
     }
-    editor.execCommand('insertHTML', '&nbsp;', true)
     editor.execCommand('insertHTML', `<img src="${base64}" data-editor-img="${id}">`, true)
     editor.saveCurrentRange()
     editor.execCommand('insertHTML', '&#8203;', true)
