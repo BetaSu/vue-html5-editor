@@ -2,6 +2,7 @@ import commands from './index'
 import constant from '../constant-config'
 
 export default function (rh, e) {
+  console.log('de')
   // restore first row
   let s = rh.getSelection()
   let node = s.baseNode
@@ -28,7 +29,7 @@ export default function (rh, e) {
     e.preventDefault()
     return afterDelete(rh)
   }
-  
+
   // empty row
   if (rh.range.collapsed && ((node === row && rh.range.startOffset === 0) || (row.innerHTML.replace(/<br>/g, '') === '' && rh.range.startOffset === 1))) {
     let firstRow = rh.editZone().firstElementChild
@@ -43,7 +44,10 @@ export default function (rh, e) {
 
   // row has content, cursor is at at start of the node, do outdent
   if (rh.range.collapsed && value && rh.range.startOffset === 0 && (node === row.fistElementChild || node === row.firstChild)) {
-    commands.outdent(rh, null)
+    let outdentResult = commands.outdent(rh, null)
+    if (outdentResult === 'NO_NEED_OUTDENT') {
+      return
+    }
     e.preventDefault()
     return
   }
