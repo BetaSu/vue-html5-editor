@@ -2,7 +2,6 @@ import commands from './index'
 import constant from '../constant-config'
 
 export default function (rh, e) {
-  console.log('de')
   // restore first row
   let s = rh.getSelection()
   let node = s.baseNode
