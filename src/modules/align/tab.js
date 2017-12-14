@@ -17,7 +17,7 @@ export default {
         key,
         type: this.alignMap[key]
       }
-      this.setAlign(index)
+      // this.setAlign(index)
     }
   },
   data () {
